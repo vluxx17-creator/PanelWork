@@ -14,7 +14,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 # --- Конфиг ---
 BOT_TOKEN = "8997816663:AAGyPl4aj69g3xeax5AZHmixw7nmhJ5SuLw"
-ADMIN_IDS = [8297446667,]  # ЗАМЕНИТЕ НА СВОЙ TELEGRAM ID (можно несколько)
+ADMIN_IDS = [8297446667]  # ваш админ
+GROUP_LINK = "https://t.me/+RIv8Upp6kptkYTVk"  # ссылка на группу
+WEBAPP_URL = "https://ваш-username.github.io/ryzen-team"  # ЗАМЕНИТЕ на ваш GitHub Pages URL
 
 # --- База данных SQLite ---
 conn = sqlite3.connect('bot_data.db', check_same_thread=False)
@@ -24,7 +26,10 @@ CREATE TABLE IF NOT EXISTS users (
     user_id INTEGER PRIMARY KEY,
     username TEXT,
     first_name TEXT,
-    registered_at TEXT
+    registered_at TEXT,
+    filled_form INTEGER DEFAULT 0,
+    form_answers TEXT,
+    is_banned INTEGER DEFAULT 0
 )
 ''')
 cursor.execute('''
@@ -53,9 +58,13 @@ conn.commit()
 class CaptchaState(StatesGroup):
     waiting_answer = State()
 
-class PayoutState(StatesGroup):
-    waiting_wallet = State()
-    waiting_nft = State()
+class FormState(StatesGroup):
+    waiting_work_hours = State()
+    waiting_goals = State()
+    waiting_success = State()
+
+class BroadcastState(StatesGroup):
+    waiting_message = State()
 
 # --- Инициализация бота ---
 bot = Bot(token=BOT_TOKEN)
@@ -76,9 +85,23 @@ def generate_captcha():
     return question, answer
 
 def save_user(user_id, username, first_name):
-    cursor.execute('INSERT OR IGNORE INTO users (user_id, username, first_name, registered_at) VALUES (?, ?, ?, ?)',
-                   (user_id, username, first_name, datetime.now().isoformat()))
+    cursor.execute('INSERT OR IGNORE INTO users (user_id, username, first_name, registered_at, filled_form, is_banned) VALUES (?, ?, ?, ?, ?, ?)',
+                   (user_id, username, first_name, datetime.now().isoformat(), 0, 0))
     conn.commit()
+
+def update_user_form(user_id, answers):
+    cursor.execute('UPDATE users SET filled_form=1, form_answers=? WHERE user_id=?', (answers, user_id))
+    conn.commit()
+
+def is_user_banned(user_id):
+    cursor.execute('SELECT is_banned FROM users WHERE user_id=?', (user_id,))
+    row = cursor.fetchone()
+    return row and row[0] == 1
+
+def is_form_filled(user_id):
+    cursor.execute('SELECT filled_form FROM users WHERE user_id=?', (user_id,))
+    row = cursor.fetchone()
+    return row and row[0] == 1
 
 def add_payout(user_id, nft, wallet):
     cursor.execute('INSERT INTO payouts (user_id, nft, wallet, requested_at, status) VALUES (?, ?, ?, ?, ?)',
@@ -95,26 +118,50 @@ def update_payout(payout_id, amount, status, admin_id):
                    (amount, status, datetime.now().isoformat(), admin_id, payout_id))
     conn.commit()
 
-# --- Обработчики команд ---
+def get_all_users():
+    cursor.execute('SELECT user_id FROM users WHERE is_banned=0')
+    return [row[0] for row in cursor.fetchall()]
 
+# --- Команда /start ---
 @dp.message(Command("start"))
 async def cmd_start(message: Message, state: FSMContext):
     user = message.from_user
-    save_user(user.id, user.username, user.first_name)
+    # Проверка, занесён ли пользователь в БД
+    cursor.execute('SELECT user_id FROM users WHERE user_id=?', (user.id,))
+    if not cursor.fetchone():
+        save_user(user.id, user.username, user.first_name)
+
+    # Проверка бана
+    if is_user_banned(user.id):
+        await message.answer("⛔ Вы забанены. Обратитесь к администратору.")
+        return
+
+    # Админ пропускает всё
+    if user.id in ADMIN_IDS:
+        await send_admin_welcome(message)
+        return
 
     # Проверяем, проходил ли капчу
     cursor.execute('SELECT answer FROM captcha_sessions WHERE user_id=?', (user.id,))
-    if cursor.fetchone():
-        await send_welcome(message)
+    if not cursor.fetchone():
+        # Запускаем капчу
+        question, answer = generate_captcha()
+        cursor.execute('INSERT OR REPLACE INTO captcha_sessions (user_id, answer, created_at) VALUES (?, ?, ?)',
+                       (user.id, answer, datetime.now().isoformat()))
+        conn.commit()
+        await state.set_state(CaptchaState.waiting_answer)
+        await message.answer(f"🧠 *Пожалуйста, решите простой пример:*\n{question}\n\nВведите ответ цифрой.", parse_mode="Markdown")
         return
 
-    question, answer = generate_captcha()
-    cursor.execute('INSERT OR REPLACE INTO captcha_sessions (user_id, answer, created_at) VALUES (?, ?, ?)',
-                   (user.id, answer, datetime.now().isoformat()))
-    conn.commit()
-    await state.set_state(CaptchaState.waiting_answer)
-    await message.answer(f"🧠 *Пожалуйста, решите простой пример:*\n{question}\n\nВведите ответ цифрой.", parse_mode="Markdown")
+    # Капча пройдена – проверяем анкету
+    if not is_form_filled(user.id):
+        await start_form(message, state)
+        return
 
+    # Всё пройдено – приветствие
+    await send_welcome(message)
+
+# --- Капча ---
 @dp.message(CaptchaState.waiting_answer)
 async def captcha_answer(message: Message, state: FSMContext):
     user = message.from_user
@@ -136,7 +183,11 @@ async def captcha_answer(message: Message, state: FSMContext):
         cursor.execute('DELETE FROM captcha_sessions WHERE user_id=?', (user.id,))
         conn.commit()
         await state.clear()
-        await send_welcome(message)
+        # Теперь проверяем анкету
+        if not is_form_filled(user.id):
+            await start_form(message, state)
+        else:
+            await send_welcome(message)
     else:
         question, answer = generate_captcha()
         cursor.execute('UPDATE captcha_sessions SET answer=?, created_at=? WHERE user_id=?',
@@ -144,24 +195,87 @@ async def captcha_answer(message: Message, state: FSMContext):
         conn.commit()
         await message.answer(f"❌ Неверно! Попробуйте ещё раз:\n{question}")
 
-async def send_welcome(message: Message):
-    user = message.from_user
-    # Укажите URL вашего мини-приложения (после деплоя на Render)
-    webapp_url = "https://ваш-хост-на-render.com"  # ЗАМЕНИТЕ
+# --- Анкета (3 вопроса) ---
+async def start_form(message: Message, state: FSMContext):
+    await state.set_state(FormState.waiting_work_hours)
+    await message.answer("📝 *Заполните анкету для вступления в команду*\n\n"
+                         "1️⃣ Сколько часов в день вы готовы воркать? (цифрой)")
+
+@dp.message(FormState.waiting_work_hours)
+async def form_work_hours(message: Message, state: FSMContext):
+    if not message.text.isdigit():
+        await message.answer("❌ Введите число часов.")
+        return
+    await state.update_data(work_hours=message.text)
+    await state.set_state(FormState.waiting_goals)
+    await message.answer("2️⃣ Какие ваши цели в нашей команде?")
+
+@dp.message(FormState.waiting_goals)
+async def form_goals(message: Message, state: FSMContext):
+    await state.update_data(goals=message.text)
+    await state.set_state(FormState.waiting_success)
+    await message.answer("3️⃣ Хотите ли вы добиться успеха в нашей команде? (да/нет)")
+
+@dp.message(FormState.waiting_success)
+async def form_success(message: Message, state: FSMContext):
+    answer = message.text.lower()
+    if answer not in ['да', 'нет']:
+        await message.answer("❌ Ответьте 'да' или 'нет'.")
+        return
+    data = await state.get_data()
+    work_hours = data.get('work_hours')
+    goals = data.get('goals')
+    full_answer = f"Часы: {work_hours}\nЦели: {goals}\nУспех: {answer}"
+    # Сохраняем в БД
+    update_user_form(message.from_user.id, full_answer)
+    await state.clear()
+
+    # Поздравляем и даём ссылку на группу + кнопку приложения
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 Перейти в приложение", web_app=WebAppInfo(url=webapp_url))]
+        [InlineKeyboardButton(text="🚀 Перейти в приложение", web_app=WebAppInfo(url=WEBAPP_URL))],
+        [InlineKeyboardButton(text="👥 Вступить в группу", url=GROUP_LINK)]
     ])
     await message.answer(
-        f"👋 *Добро пожаловать, {user.first_name}!*\n\n"
-        "Вы успешно прошли капчу. Теперь вы можете пользоваться нашим сервисом.\n"
+        f"✅ *Вы приняты в команду Ryzen Team!*\n\n"
+        f"🎉 Поздравляем! Теперь вы часть нашего сообщества.\n"
+        f"🔥 Подайте заявку в нашу группу: {GROUP_LINK}\n\n"
+        f"А также можете перейти в мини-приложение для управления выплатами.",
+        parse_mode="Markdown",
+        reply_markup=keyboard
+    )
+
+# --- Приветствие для прошедших анкету ---
+async def send_welcome(message: Message):
+    user = message.from_user
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 Перейти в приложение", web_app=WebAppInfo(url=WEBAPP_URL))]
+    ])
+    await message.answer(
+        f"👋 *Добро пожаловать обратно, {user.first_name}!*\n\n"
+        "Вы уже прошли анкету и являетесь участником команды.\n"
         "Нажмите кнопку ниже, чтобы открыть мини-приложение.",
         parse_mode="Markdown",
         reply_markup=keyboard
     )
 
+# --- Приветствие для админа ---
+async def send_admin_welcome(message: Message):
+    await message.answer(
+        "👑 *Добро пожаловать, Администратор!*\n\n"
+        "Доступные команды:\n"
+        "/admin – управление заявками\n"
+        "/ban – забанить пользователя (ответом на сообщение)\n"
+        "/unban – разбанить (по ID или username)\n"
+        "/broadcast – сделать рассылку всем пользователям",
+        parse_mode="Markdown"
+    )
+
 # --- Обработка данных из WebApp ---
 @dp.message(F.web_app_data)
 async def handle_webapp_data(message: Message):
+    if is_user_banned(message.from_user.id):
+        await message.answer("⛔ Вы забанены.")
+        return
     data = message.web_app_data.data
     try:
         payload = json.loads(data)
@@ -182,6 +296,8 @@ async def handle_webapp_data(message: Message):
         await message.answer("❌ Ошибка обработки данных.")
 
 # --- Административные команды ---
+
+# /admin – список заявок
 @dp.message(Command("admin"))
 async def admin_panel(message: Message):
     if message.from_user.id not in ADMIN_IDS:
@@ -201,6 +317,7 @@ async def admin_panel(message: Message):
     builder.adjust(1)
     await message.answer("📋 *Список заявок:*", parse_mode="Markdown", reply_markup=builder.as_markup())
 
+# Обработка нажатия на заявку
 @dp.callback_query(lambda c: c.data and c.data.startswith('payout_'))
 async def payout_detail(callback: CallbackQuery, state: FSMContext):
     if callback.from_user.id not in ADMIN_IDS:
@@ -233,6 +350,7 @@ async def payout_detail(callback: CallbackQuery, state: FSMContext):
     )
     await callback.answer()
 
+# Принять заявку
 @dp.callback_query(lambda c: c.data and c.data.startswith('accept_'))
 async def accept_payout(callback: CallbackQuery, state: FSMContext):
     if callback.from_user.id not in ADMIN_IDS:
@@ -275,19 +393,17 @@ async def process_amount(message: Message, state: FSMContext):
                 f"Сумма: {amount} ETH\n"
                 f"NFT: {nft}\n"
                 f"Кошелёк: {wallet}\n"
-                f"Статус: принята администратором.\n\n"
-                f"💸 Средства отправлены на ваш кошелёк (автоматически).",
+                f"Статус: принята администратором.",
                 parse_mode="Markdown"
             )
         except Exception as e:
             logging.error(f"Не удалось уведомить пользователя {user_id}: {e}")
-        # Здесь можно вызвать реальную отправку TON (заглушка)
-        # await send_ton(wallet, amount)   # реализовать отдельно
         await message.answer(f"✅ Заявка #{payout_id} принята, сумма {amount} ETH. Пользователь уведомлён.")
     else:
         await message.answer("❌ Заявка не найдена.")
     await state.clear()
 
+# Отклонить заявку
 @dp.callback_query(lambda c: c.data and c.data.startswith('reject_'))
 async def reject_payout(callback: CallbackQuery):
     if callback.from_user.id not in ADMIN_IDS:
@@ -312,22 +428,83 @@ async def reject_payout(callback: CallbackQuery):
     await callback.message.edit_text(f"❌ Заявка #{payout_id} отклонена.")
     await callback.answer()
 
-# --- Управление группой (примеры) ---
+# /ban – забанить пользователя (ответом на сообщение)
 @dp.message(Command("ban"))
 async def ban_user(message: Message):
     if message.from_user.id not in ADMIN_IDS:
         await message.answer("⛔ Нет прав.")
         return
     if not message.reply_to_message:
-        await message.answer("Ответьте на сообщение пользователя.")
+        await message.answer("Ответьте на сообщение пользователя, которого хотите забанить.")
         return
     user_id = message.reply_to_message.from_user.id
-    try:
-        await bot.ban_chat_member(message.chat.id, user_id)
-        await message.answer(f"✅ Пользователь {user_id} забанен.")
-    except Exception as e:
-        await message.answer(f"❌ Ошибка: {e}")
+    if user_id in ADMIN_IDS:
+        await message.answer("⛔ Нельзя забанить администратора.")
+        return
+    cursor.execute('UPDATE users SET is_banned=1 WHERE user_id=?', (user_id,))
+    conn.commit()
+    await message.answer(f"✅ Пользователь {user_id} забанен.")
 
+# /unban – разбанить (по ID или username)
+@dp.message(Command("unban"))
+async def unban_user(message: Message):
+    if message.from_user.id not in ADMIN_IDS:
+        await message.answer("⛔ Нет прав.")
+        return
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        await message.answer("Укажите ID или @username пользователя.\nПример: /unban 123456789")
+        return
+    target = args[1].strip()
+    if target.startswith('@'):
+        username = target[1:]
+        cursor.execute('SELECT user_id FROM users WHERE username=?', (username,))
+        row = cursor.fetchone()
+        if not row:
+            await message.answer("❌ Пользователь не найден.")
+            return
+        user_id = row[0]
+    else:
+        try:
+            user_id = int(target)
+        except ValueError:
+            await message.answer("❌ Некорректный ID.")
+            return
+    cursor.execute('UPDATE users SET is_banned=0 WHERE user_id=?', (user_id,))
+    conn.commit()
+    await message.answer(f"✅ Пользователь {user_id} разбанен.")
+
+# /broadcast – рассылка всем пользователям
+@dp.message(Command("broadcast"))
+async def broadcast_start(message: Message, state: FSMContext):
+    if message.from_user.id not in ADMIN_IDS:
+        await message.answer("⛔ Нет прав.")
+        return
+    await state.set_state(BroadcastState.waiting_message)
+    await message.answer("✍️ Введите сообщение для рассылки:")
+
+@dp.message(BroadcastState.waiting_message)
+async def broadcast_send(message: Message, state: FSMContext):
+    if message.from_user.id not in ADMIN_IDS:
+        await message.answer("⛔ Нет прав.")
+        return
+    text = message.text
+    users = get_all_users()
+    if not users:
+        await message.answer("❌ Нет пользователей для рассылки.")
+        await state.clear()
+        return
+    sent = 0
+    for uid in users:
+        try:
+            await bot.send_message(uid, f"📢 *Рассылка от администрации:*\n\n{text}", parse_mode="Markdown")
+            sent += 1
+        except:
+            pass
+    await message.answer(f"✅ Рассылка отправлена {sent} пользователям.")
+    await state.clear()
+
+# --- Управление группой (примеры команд для модерации) ---
 @dp.message(Command("mute"))
 async def mute_user(message: Message):
     if message.from_user.id not in ADMIN_IDS:
