@@ -14,7 +14,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 # --- Конфиг ---
 BOT_TOKEN = "8997816663:AAGyPl4aj69g3xeax5AZHmixw7nmhJ5SuLw"
-ADMIN_IDS = [123456789]  # ЗАМЕНИТЕ НА СВОЙ TELEGRAM ID (можно несколько)
+ADMIN_IDS = [8297446667,]  # ЗАМЕНИТЕ НА СВОЙ TELEGRAM ID (можно несколько)
 
 # --- База данных SQLite ---
 conn = sqlite3.connect('bot_data.db', check_same_thread=False)
