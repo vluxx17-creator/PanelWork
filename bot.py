@@ -12,23 +12,23 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from aiohttp import web
 
-# --- Конфиг ---
+# ========== КОНФИГ ==========
 BOT_TOKEN = "8997816663:AAGyPl4aj69g3xeax5AZHmixw7nmhJ5SuLw"
-ADMIN_IDS = [8297446667]  # ваш админ
+ADMIN_IDS = [8297446667]  # твой Telegram ID
 GROUP_LINK = "https://t.me/+RIv8Upp6kptkYTVk"
-WEBAPP_URL = "https://vluxx17-creator.github.io/Ryzenteam/"  # ЗАМЕНИТЕ
 
-# Порт для вебхука (Render задаёт через PORT)
+# ====== ТВОИ ССЫЛКИ (исправлены) ======
+WEBAPP_URL = "https://vluxx17-creator.github.io/Ryzenteam/"   # GitHub Pages
+WEBHOOK_HOST = "https://panelwork.onrender.com"               # Render
+
+# Порт — Render подставляет автоматически через переменную PORT
 PORT = int(os.environ.get("PORT", 8443))
 WEBHOOK_PATH = "/webhook"
-# Для локального теста можно закомментировать WEBHOOK_HOST,
-# но на Render нужно указать публичный URL вашего сервиса
-WEBHOOK_HOST = os.environ.get("WEBHOOK_HOST", "https://ваш-сервис.onrender.com")
 
-# --- База данных SQLite ---
+# ========== БАЗА ДАННЫХ ==========
 conn = sqlite3.connect('bot_data.db', check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute('''
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS captcha_sessions (
 ''')
 conn.commit()
 
-# --- Состояния FSM ---
+# ========== СОСТОЯНИЯ FSM ==========
 class CaptchaState(StatesGroup):
     waiting_answer = State()
 
@@ -76,11 +76,11 @@ class FormState(StatesGroup):
 class BroadcastState(StatesGroup):
     waiting_message = State()
 
-# --- Инициализация бота ---
+# ========== ИНИЦИАЛИЗАЦИЯ БОТА ==========
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# --- Утилиты ---
+# ========== УТИЛИТЫ ==========
 def generate_captcha():
     a = random.randint(1, 9)
     b = random.randint(1, 9)
@@ -132,7 +132,8 @@ def get_all_users():
     cursor.execute('SELECT user_id FROM users WHERE is_banned=0')
     return [row[0] for row in cursor.fetchall()]
 
-# --- Обработчики команд (все те же, что были) ---
+# ========== ОБРАБОТЧИКИ КОМАНД ==========
+
 @dp.message(Command("start"))
 async def cmd_start(message: Message, state: FSMContext):
     user = message.from_user
@@ -504,29 +505,26 @@ async def mute_user(message: Message):
     except Exception as e:
         await message.answer(f"❌ Ошибка: {e}")
 
-# --- Запуск через вебхук (с портом) ---
+# ========== ЗАПУСК ЧЕРЕЗ ВЕБХУК (СЛУШАЕТ ПОРТ) ==========
 async def on_startup():
-    # Устанавливаем вебхук
     webhook_url = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
     await bot.set_webhook(webhook_url)
-    logging.info(f"Webhook set to {webhook_url}")
+    logging.info(f"Webhook установлен на {webhook_url}")
 
 async def main():
     logging.basicConfig(level=logging.INFO)
 
-    # Создаём aiohttp приложение
+    # Создаём aiohttp-приложение
     app = web.Application()
+
+    # Настраиваем обработчик вебхуков
     webhook_requests_handler = SimpleRequestHandler(
         dispatcher=dp,
         bot=bot,
-        secret_token=None,  # можно добавить SECRET_TOKEN для безопасности
     )
     webhook_requests_handler.register(app, path=WEBHOOK_PATH)
 
-    # Настраиваем запуск (установка вебхука)
-    app.router.post(WEBHOOK_PATH, webhook_requests_handler.handle)
-
-    # Запускаем веб-сервер
+    # Запускаем веб-сервер на порту, который даёт Render
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
@@ -535,9 +533,8 @@ async def main():
     # Устанавливаем вебхук при старте
     await on_startup()
 
-    logging.info(f"Bot started, listening on port {PORT}")
-    # Бесконечное ожидание
-    await asyncio.Event().wait()
+    logging.info(f"✅ Бот запущен, слушает порт {PORT}")
+    await asyncio.Event().wait()  # бесконечное ожидание
 
 if __name__ == "__main__":
     asyncio.run(main())
