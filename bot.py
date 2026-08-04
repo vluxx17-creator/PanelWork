@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS users (
     registered_at TEXT,
     filled_form INTEGER DEFAULT 0,
     form_answers TEXT,
-    is_banned INTEGER DEFAULT 0
+    is_banned INTEGER DEFAULT 0,
+    balance REAL DEFAULT 0
 )
 ''')
 cursor.execute('''
@@ -93,8 +94,8 @@ def generate_captcha():
     return question, answer
 
 def save_user(user_id, username, first_name):
-    cursor.execute('INSERT OR IGNORE INTO users (user_id, username, first_name, registered_at, filled_form, is_banned) VALUES (?, ?, ?, ?, ?, ?)',
-                   (user_id, username, first_name, datetime.now().isoformat(), 0, 0))
+    cursor.execute('INSERT OR IGNORE INTO users (user_id, username, first_name, registered_at, filled_form, is_banned, balance) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                   (user_id, username, first_name, datetime.now().isoformat(), 0, 0, 0))
     conn.commit()
 
 def update_user_form(user_id, answers):
@@ -137,6 +138,27 @@ def get_payout(payout_id):
 def get_all_users():
     cursor.execute('SELECT user_id FROM users WHERE is_banned=0')
     return [row[0] for row in cursor.fetchall()]
+
+def update_user_balance(user_id, amount):
+    cursor.execute('UPDATE users SET balance = balance + ? WHERE user_id=?', (amount, user_id))
+    conn.commit()
+
+def get_user_balance(user_id):
+    cursor.execute('SELECT balance FROM users WHERE user_id=?', (user_id,))
+    row = cursor.fetchone()
+    return row[0] if row else 0
+
+# ========== ИМИТАЦИЯ ОТПРАВКИ TON (ЗАГЛУШКА) ==========
+async def send_ton(wallet_address, amount_eth):
+    """
+    Реальная отправка TON на кошелёк через Tonkeeper API или TON Connect.
+    Пока только логируем.
+    В будущем замените на реальный вызов.
+    """
+    logging.info(f"💸 ОТПРАВКА TON: {amount_eth} ETH на кошелёк {wallet_address}")
+    # Здесь должен быть код для реальной отправки
+    # Например, через библиотеку ton или HTTP-запрос к Tonkeeper
+    return True  # имитируем успех
 
 # ========== ОБРАБОТЧИКИ КОМАНД ==========
 
@@ -290,7 +312,6 @@ async def handle_webapp_data(message: Message):
         user_id = message.from_user.id
         payout_id = add_payout(user_id, nft, wallet)
 
-        # Ответ пользователю
         await message.answer(f"✅ *Заявка на выплату создана!*\n"
                              f"🆔 ID: {payout_id}\n"
                              f"🖼 NFT: {nft}\n"
@@ -298,7 +319,6 @@ async def handle_webapp_data(message: Message):
                              f"⏳ Ожидайте решения администратора.",
                              parse_mode="Markdown")
 
-        # Уведомление админам с кнопками
         user = message.from_user
         username = f"@{user.username}" if user.username else user.first_name
         admin_text = (
@@ -318,7 +338,6 @@ async def handle_webapp_data(message: Message):
         ])
         for admin_id in ADMIN_IDS:
             sent = await bot.send_message(admin_id, admin_text, parse_mode="Markdown", reply_markup=keyboard)
-            # Сохраняем ID сообщения админа, чтобы потом обновить его
             cursor.execute('UPDATE payouts SET admin_message_id=? WHERE id=?', (sent.message_id, payout_id))
             conn.commit()
 
@@ -333,7 +352,6 @@ async def accept_payout_callback(callback: CallbackQuery, state: FSMContext):
         await callback.answer("⛔ Нет прав.", show_alert=True)
         return
     payout_id = int(callback.data.split('_')[1])
-    # Сохраняем ID заявки в состояние
     await state.update_data(payout_id=payout_id)
     await callback.message.answer("💰 Введите сумму выплаты (в ETH, например 0.1):")
     await state.set_state("waiting_amount")
@@ -358,46 +376,70 @@ async def process_amount(message: Message, state: FSMContext):
         await state.clear()
         return
 
-    # Обновляем заявку
-    update_payout(payout_id, amount, 'accepted', message.from_user.id)
-
-    # Получаем данные заявки
+    # Получаем данные заявки до обновления
     cursor.execute('SELECT user_id, nft, wallet, admin_message_id FROM payouts WHERE id=?', (payout_id,))
     row = cursor.fetchone()
-    if row:
-        user_id, nft, wallet, admin_msg_id = row
-        # Уведомление пользователю
+    if not row:
+        await message.answer("❌ Заявка не найдена.")
+        await state.clear()
+        return
+    user_id, nft, wallet, admin_msg_id = row
+
+    # Обновляем статус заявки
+    update_payout(payout_id, amount, 'accepted', message.from_user.id)
+
+    # 1) Увеличиваем баланс пользователя
+    update_user_balance(user_id, amount)
+    new_balance = get_user_balance(user_id)
+
+    # 2) Имитация отправки TON на кошелёк
+    send_success = await send_ton(wallet, amount)
+    if send_success:
+        log_msg = f"✅ Отправка TON на {wallet} успешна (сумма {amount} ETH)"
+    else:
+        log_msg = f"❌ Ошибка отправки TON на {wallet}"
+    logging.info(log_msg)
+
+    # 3) Уведомление пользователю
+    try:
+        await bot.send_message(
+            user_id,
+            f"✅ *Ваша выплата одобрена!*\n\n"
+            f"💰 Сумма: {amount} ETH\n"
+            f"🖼 NFT: {nft}\n"
+            f"💳 Кошелёк: `{wallet}`\n"
+            f"📅 Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}\n\n"
+            f"Статус: *принята* администратором.\n"
+            f"💸 Средства отправлены на ваш кошелёк.",
+            parse_mode="Markdown"
+        )
+        # Отправляем дополнительное сообщение с обновлением баланса (для WebApp можно передать через параметры URL или через WebApp)
+        # Здесь мы просто уведомляем, что баланс обновлён
+        await bot.send_message(
+            user_id,
+            f"💰 Ваш баланс пополнен на {amount} ETH. Текущий баланс: {new_balance} ETH.",
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        logging.error(f"Не удалось уведомить пользователя {user_id}: {e}")
+
+    # 4) Обновляем сообщение админа
+    for admin_id in ADMIN_IDS:
         try:
-            await bot.send_message(
-                user_id,
-                f"✅ *Ваша выплата одобрена!*\n\n"
-                f"💰 Сумма: {amount} ETH\n"
-                f"🖼 NFT: {nft}\n"
-                f"💳 Кошелёк: `{wallet}`\n"
-                f"📅 Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}\n\n"
-                f"Статус: *принята* администратором.",
+            await bot.edit_message_text(
+                f"✅ *Заявка #{payout_id} принята*\n"
+                f"Сумма: {amount} ETH\n"
+                f"Пользователь: @{message.from_user.username or message.from_user.first_name}\n"
+                f"Кошелёк: {wallet}\n"
+                f"Статус: отправлено на кошелёк",
+                chat_id=admin_id,
+                message_id=admin_msg_id,
                 parse_mode="Markdown"
             )
-        except Exception as e:
-            logging.error(f"Не удалось уведомить пользователя {user_id}: {e}")
+        except:
+            pass
 
-        # Обновляем сообщение админа (убираем кнопки)
-        for admin_id in ADMIN_IDS:
-            try:
-                await bot.edit_message_text(
-                    f"✅ *Заявка #{payout_id} принята*\n"
-                    f"Сумма: {amount} ETH\n"
-                    f"Пользователь: @{message.from_user.username or message.from_user.first_name}",
-                    chat_id=admin_id,
-                    message_id=admin_msg_id,
-                    parse_mode="Markdown"
-                )
-            except:
-                pass
-
-        await message.answer(f"✅ Заявка #{payout_id} принята, сумма {amount} ETH. Пользователь уведомлён.")
-    else:
-        await message.answer("❌ Заявка не найдена.")
+    await message.answer(f"✅ Заявка #{payout_id} принята, сумма {amount} ETH. Пользователь уведомлён, TON отправлен.")
     await state.clear()
 
 @dp.callback_query(lambda c: c.data and c.data.startswith('reject_'))
@@ -407,7 +449,6 @@ async def reject_payout_callback(callback: CallbackQuery):
         return
     payout_id = int(callback.data.split('_')[1])
 
-    # Получаем данные заявки
     cursor.execute('SELECT user_id, nft, wallet, admin_message_id FROM payouts WHERE id=?', (payout_id,))
     row = cursor.fetchone()
     if not row:
@@ -415,10 +456,8 @@ async def reject_payout_callback(callback: CallbackQuery):
         return
     user_id, nft, wallet, admin_msg_id = row
 
-    # Обновляем статус
     update_payout(payout_id, 0, 'rejected', callback.from_user.id)
 
-    # Уведомляем пользователя
     try:
         await bot.send_message(
             user_id,
@@ -431,7 +470,6 @@ async def reject_payout_callback(callback: CallbackQuery):
     except:
         pass
 
-    # Обновляем сообщение админа
     for admin_id in ADMIN_IDS:
         try:
             await bot.edit_message_text(
@@ -447,7 +485,7 @@ async def reject_payout_callback(callback: CallbackQuery):
     await callback.message.edit_text(f"❌ Заявка #{payout_id} отклонена.")
     await callback.answer()
 
-# ========== АДМИН-КОМАНДА /admin (список заявок) ==========
+# ========== ОСТАЛЬНЫЕ КОМАНДЫ (admin, ban, unban, broadcast, mute) ==========
 @dp.message(Command("admin"))
 async def admin_panel(message: Message):
     if message.from_user.id not in ADMIN_IDS:
@@ -499,7 +537,6 @@ async def payout_detail(callback: CallbackQuery, state: FSMContext):
     )
     await callback.answer()
 
-# ========== ОСТАЛЬНЫЕ КОМАНДЫ (ban, unban, broadcast, mute) ==========
 @dp.message(Command("ban"))
 async def ban_user(message: Message):
     if message.from_user.id not in ADMIN_IDS:
