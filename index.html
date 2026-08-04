@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <style>
+        /* ----- БАЗОВЫЕ СТИЛИ ----- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
@@ -17,8 +18,12 @@
             align-items: center;
             justify-content: center;
             padding: 12px;
-            background: radial-gradient(circle at 30% 20%, #1f0a0a, #050505 90%);
+            transition: background 0.3s ease;
         }
+        body.light {
+            background: #f5f5f5;
+        }
+        /* ----- ПАНЕЛЬ ----- */
         .glass-panel {
             width: 1320px;
             max-width: 100%;
@@ -32,7 +37,14 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
+        body.light .glass-panel {
+            background: rgba(255, 255, 255, 0.55);
+            border-color: rgba(0, 0, 0, 0.1);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.1);
+        }
+        /* ----- ВЕРХНЯЯ ПЛАНКА ----- */
         .top-bar {
             display: flex;
             align-items: center;
@@ -42,6 +54,10 @@
             background: rgba(0,0,0,0.2);
             backdrop-filter: blur(6px);
             flex-shrink: 0;
+        }
+        body.light .top-bar {
+            border-bottom-color: rgba(0,0,0,0.05);
+            background: rgba(255,255,255,0.1);
         }
         .top-bar .brand {
             font-size: 22px;
@@ -56,6 +72,7 @@
             color: rgba(255,255,255,0.2);
             margin-left: 6px;
         }
+        body.light .top-bar .brand small { color: rgba(0,0,0,0.3); }
         .top-bar .user-badge {
             display: flex;
             align-items: center;
@@ -63,8 +80,10 @@
             color: rgba(255,255,255,0.5);
             font-size: 13px;
         }
+        body.light .top-bar .user-badge { color: rgba(0,0,0,0.5); }
         .top-bar .user-badge i { color: #4caf50; font-size: 11px; }
 
+        /* ----- ОСНОВНОЙ КОНТЕНТ ----- */
         .main-content {
             flex: 1;
             position: relative;
@@ -82,16 +101,17 @@
         }
         .page.active {
             display: flex;
-            animation: fadeIn 0.35s ease;
+            animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
+            0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         .page::-webkit-scrollbar { width: 4px; }
         .page::-webkit-scrollbar-track { background: transparent; }
         .page::-webkit-scrollbar-thumb { background: rgba(255,70,70,0.2); border-radius: 10px; }
 
+        /* ----- ОБЛОЖКА ----- */
         .cover-area {
             position: relative;
             border-radius: 28px;
@@ -103,14 +123,20 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
             flex-shrink: 0;
         }
+        body.light .cover-area {
+            background: radial-gradient(circle at 30% 30%, #e0d0d0, #f0f0f0);
+            border-color: rgba(0,0,0,0.05);
+        }
         .cover-image {
             width: 100%;
             height: 100%;
             object-fit: contain;
             display: block;
             background: transparent;
-            mask-image: radial-gradient(circle at 50% 50%, black 55%, transparent 92%);
-            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 55%, transparent 92%);
+            /* Улучшенная маска для удаления фона */
+            mask-image: radial-gradient(circle at 50% 50%, black 50%, transparent 92%);
+            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 50%, transparent 92%);
+            mix-blend-mode: multiply;
             animation: float 6s ease-in-out infinite;
             filter: drop-shadow(0 0 30px rgba(255,0,0,0.2));
         }
@@ -163,6 +189,7 @@
         }
         #coverUpload { display: none; }
 
+        /* ----- ПРОФИЛЬ И СТАТИСТИКА ----- */
         .profile-stats {
             display: flex;
             align-items: center;
@@ -174,6 +201,11 @@
             padding: 12px 20px;
             border: 1px solid rgba(255,70,70,0.04);
             flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        body.light .profile-stats {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(0,0,0,0.04);
         }
         .profile-avatar {
             width: 56px;
@@ -207,6 +239,7 @@
             cursor: pointer;
             transition: 0.2s;
         }
+        body.light .profile-info .name { color: #1a1a1a; }
         .profile-info .name:hover { color: #ff6b6b; }
         .profile-info .name-edit {
             background: transparent;
@@ -220,11 +253,13 @@
             width: 140px;
             padding: 0 4px;
         }
+        body.light .profile-info .name-edit { color: #1a1a1a; }
         .profile-info .name-edit:focus { border-bottom-color: #ff6b6b; }
         .profile-info .handle {
             font-size: 12px;
             color: rgba(255,255,255,0.3);
         }
+        body.light .profile-info .handle { color: rgba(0,0,0,0.3); }
         .stats-group {
             display: flex;
             gap: 24px;
@@ -239,12 +274,14 @@
             line-height: 1.2;
         }
         .stat-item .number.empty { color: rgba(255,255,255,0.1); }
+        body.light .stat-item .number.empty { color: rgba(0,0,0,0.1); }
         .stat-item .label {
             font-size: 9px;
             color: rgba(255,255,255,0.25);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        body.light .stat-item .label { color: rgba(0,0,0,0.25); }
 
         .widgets-row {
             display: flex;
@@ -263,10 +300,12 @@
             gap: 8px;
             transition: 0.2s;
         }
-        .widget-item:hover { background: rgba(255,70,70,0.04); }
+        .widget-item:hover { background: rgba(255,70,70,0.04); transform: translateY(-2px); }
         .widget-item i { font-size: 20px; color: #ff6b6b; opacity: 0.5; }
         .widget-item .w-text { font-size: 12px; color: rgba(255,255,255,0.5); }
+        body.light .widget-item .w-text { color: rgba(0,0,0,0.5); }
         .widget-item .w-text strong { color: #fff; font-weight: 600; }
+        body.light .widget-item .w-text strong { color: #1a1a1a; }
 
         .empty-mentors {
             color: rgba(255,255,255,0.25);
@@ -275,6 +314,7 @@
             padding: 30px 0;
         }
         .empty-mentors i { font-size: 28px; display: block; margin-bottom: 8px; opacity: 0.2; }
+        body.light .empty-mentors { color: rgba(0,0,0,0.25); }
 
         .settings-grid {
             display: grid;
@@ -289,11 +329,17 @@
             background: rgba(0,0,0,0.15);
             border-radius: 14px;
             border: 1px solid rgba(255,255,255,0.02);
+            transition: 0.2s;
+        }
+        body.light .setting-toggle {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(0,0,0,0.02);
         }
         .setting-toggle span {
             color: rgba(255,255,255,0.5);
             font-size: 12px;
         }
+        body.light .setting-toggle span { color: rgba(0,0,0,0.5); }
         .toggle-switch {
             width: 38px;
             height: 20px;
@@ -304,6 +350,7 @@
             transition: 0.3s;
             border: 1px solid rgba(255,255,255,0.03);
         }
+        body.light .toggle-switch { background: rgba(0,0,0,0.08); }
         .toggle-switch.active { background: #ff3b3b; }
         .toggle-switch::after {
             content: '';
@@ -335,6 +382,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        body.light .payout-form label { color: rgba(0,0,0,0.3); }
         .payout-form input, .payout-form select {
             background: rgba(0,0,0,0.25);
             border: 1px solid rgba(255,70,70,0.06);
@@ -346,12 +394,20 @@
             outline: none;
             transition: 0.2s;
         }
+        body.light .payout-form input, body.light .payout-form select {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(0,0,0,0.06);
+            color: #1a1a1a;
+        }
         .payout-form input:focus, .payout-form select:focus {
             border-color: #ff3b3b;
             box-shadow: 0 0 20px rgba(255,0,0,0.03);
         }
         .payout-form input::placeholder { color: rgba(255,255,255,0.15); }
+        body.light .payout-form input::placeholder { color: rgba(0,0,0,0.15); }
         .payout-form select option { background: #1a1a1a; }
+        body.light .payout-form select option { background: #f5f5f5; }
+
         .btn-payout {
             background: linear-gradient(135deg, #ff3b3b, #b71c1c);
             border: none;
@@ -390,6 +446,11 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
+            transition: 0.3s;
+        }
+        body.light .glass-card {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(0,0,0,0.06);
         }
         .card-header {
             display: flex;
@@ -402,6 +463,7 @@
             font-weight: 600;
             color: #fff;
         }
+        body.light .card-header h3 { color: #1a1a1a; }
         .card-header h3 i { margin-right: 8px; color: #ff3b3b; }
 
         .bottom-nav {
@@ -416,6 +478,10 @@
             gap: 4px;
             flex-wrap: wrap;
         }
+        body.light .bottom-nav {
+            background: rgba(255,255,255,0.3);
+            border-top-color: rgba(0,0,0,0.06);
+        }
         .bottom-nav .nav-item {
             display: flex;
             flex-direction: column;
@@ -424,7 +490,7 @@
             color: rgba(255,255,255,0.3);
             font-size: 9px;
             font-weight: 500;
-            transition: 0.2s ease;
+            transition: all 0.25s ease;
             cursor: pointer;
             padding: 4px 12px;
             border-radius: 30px;
@@ -434,6 +500,7 @@
             min-width: 52px;
             position: relative;
         }
+        body.light .bottom-nav .nav-item { color: rgba(0,0,0,0.3); }
         .bottom-nav .nav-item i {
             font-size: 20px;
             transition: 0.2s;
@@ -450,7 +517,8 @@
         .bottom-nav .nav-item.active i {
             text-shadow: 0 0 30px rgba(255,0,0,0.2);
         }
-        .bottom-nav .nav-item:hover { color: #fff; background: rgba(255,255,255,0.03); }
+        .bottom-nav .nav-item:hover { color: #fff; background: rgba(255,255,255,0.03); transform: translateY(-2px); }
+        body.light .bottom-nav .nav-item:hover { color: #1a1a1a; background: rgba(0,0,0,0.03); }
 
         .toast-container {
             position: fixed;
@@ -487,172 +555,38 @@
         }
 
         @media (max-width: 768px) {
-            body { padding: 8px; }
-            .glass-panel {
-                height: auto;
-                max-height: 98vh;
-                border-radius: 28px;
-                min-height: 600px;
-            }
-            .top-bar {
-                padding: 10px 16px;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-            .top-bar .brand {
-                font-size: 18px;
-            }
-            .top-bar .brand small {
-                font-size: 10px;
-            }
-            .top-bar .user-badge {
-                font-size: 11px;
-            }
-            .page {
-                padding: 14px 16px 12px 16px;
-                gap: 12px;
-            }
-            .cover-area {
-                height: 120px;
-                min-height: 90px;
-                border-radius: 20px;
-            }
-            .cover-nft-badge {
-                font-size: 10px;
-                padding: 4px 12px;
-                top: 10px;
-                left: 14px;
-            }
-            .cover-overlay button {
-                font-size: 11px;
-                padding: 5px 14px;
-            }
-            .profile-stats {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 8px;
-                padding: 12px 16px;
-                border-radius: 24px;
-            }
-            .profile-avatar {
-                width: 48px;
-                height: 48px;
-                font-size: 22px;
-            }
-            .profile-info .name {
-                font-size: 16px;
-            }
-            .profile-info .name-edit {
-                font-size: 16px;
-                width: 120px;
-            }
-            .stats-group {
-                margin-left: 0;
-                justify-content: space-around;
-                gap: 12px;
-            }
-            .stat-item .number {
-                font-size: 18px;
-            }
-            .widgets-row {
-                flex-direction: column;
-            }
-            .widget-item {
-                min-width: unset;
-            }
-            .settings-grid {
-                grid-template-columns: 1fr;
-            }
-            .bottom-nav {
-                padding: 4px 8px 10px 8px;
-                gap: 2px;
-            }
-            .bottom-nav .nav-item {
-                min-width: 44px;
-                padding: 4px 6px;
-            }
-            .bottom-nav .nav-item i {
-                font-size: 18px;
-            }
-            .bottom-nav .nav-item span {
-                font-size: 7px;
-            }
-            .toast {
-                font-size: 12px;
-                padding: 10px 18px;
-                bottom: 80px;
-            }
+            .glass-panel { height: auto; max-height: 98vh; border-radius: 28px; min-height: 600px; }
+            .top-bar { padding: 10px 16px; flex-wrap: wrap; gap: 6px; }
+            .top-bar .brand { font-size: 18px; }
+            .top-bar .brand small { display: none; }
+            .page { padding: 14px 16px 12px 16px; gap: 12px; }
+            .cover-area { height: 120px; min-height: 90px; border-radius: 20px; }
+            .profile-stats { flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 16px; }
+            .profile-avatar { width: 48px; height: 48px; font-size: 22px; }
+            .profile-info .name { font-size: 16px; }
+            .profile-info .name-edit { font-size: 16px; width: 120px; }
+            .stats-group { margin-left: 0; justify-content: space-around; gap: 12px; }
+            .stat-item .number { font-size: 18px; }
+            .settings-grid { grid-template-columns: 1fr; }
+            .bottom-nav .nav-item { min-width: 44px; padding: 4px 8px; }
+            .bottom-nav .nav-item i { font-size: 18px; }
+            .bottom-nav .nav-item span { font-size: 7px; }
         }
         @media (max-width: 480px) {
-            .glass-panel {
-                border-radius: 20px;
-                max-height: 99vh;
-            }
-            .page {
-                padding: 10px 12px 8px 12px;
-                gap: 10px;
-            }
-            .cover-area {
-                height: 100px;
-                min-height: 70px;
-            }
-            .cover-nft-badge {
-                font-size: 8px;
-                padding: 3px 10px;
-                top: 8px;
-                left: 10px;
-            }
-            .cover-overlay button {
-                font-size: 10px;
-                padding: 4px 12px;
-            }
-            .profile-avatar {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-            }
-            .profile-info .name {
-                font-size: 14px;
-            }
-            .profile-info .name-edit {
-                font-size: 14px;
-                width: 100px;
-            }
-            .profile-info .handle {
-                font-size: 10px;
-            }
-            .stat-item .number {
-                font-size: 16px;
-            }
-            .stat-item .label {
-                font-size: 8px;
-            }
-            .glass-card {
-                padding: 14px;
-            }
-            .card-header h3 {
-                font-size: 14px;
-            }
-            .bottom-nav .nav-item {
-                min-width: 38px;
-                padding: 2px 4px;
-            }
-            .bottom-nav .nav-item i {
-                font-size: 16px;
-            }
-            .bottom-nav .nav-item span {
-                font-size: 6px;
-            }
-            .toast {
-                font-size: 11px;
-                padding: 8px 14px;
-                bottom: 70px;
-            }
+            .cover-area { height: 100px; min-height: 70px; }
+            .profile-avatar { width: 40px; height: 40px; font-size: 18px; }
+            .profile-info .name { font-size: 14px; }
+            .profile-info .name-edit { font-size: 14px; width: 100px; }
+            .stat-item .number { font-size: 16px; }
+            .bottom-nav .nav-item { min-width: 38px; padding: 2px 6px; }
+            .bottom-nav .nav-item i { font-size: 16px; }
+            .bottom-nav .nav-item span { display: none; }
         }
     </style>
 </head>
 <body>
-<div class="glass-panel">
+<div class="glass-panel" id="panel">
+
     <div class="top-bar">
         <div class="brand"><i class="fas fa-bolt"></i> Ryzen <span style="color:#fff;">Team</span> <small>· work panel</small></div>
         <div class="user-badge"><i class="fas fa-circle"></i> <span>онлайн</span></div>
@@ -670,14 +604,14 @@
                 </div>
             </div>
             <div class="profile-stats">
-                <div class="profile-avatar">R</div>
+                <div class="profile-avatar" id="avatarLetter">R</div>
                 <div class="profile-info">
                     <div class="name-wrap">
-                        <span class="name" id="displayName">Blackbox_User</span>
+                        <span class="name" id="displayName">Загрузка...</span>
                         <i class="fas fa-pencil-alt" id="editNameIcon" style="color:rgba(255,255,255,0.15); cursor:pointer; font-size:13px;"></i>
                         <input type="text" class="name-edit" id="nameInput" style="display:none;" maxlength="20">
                     </div>
-                    <div class="handle">@blackbox_research</div>
+                    <div class="handle" id="userHandle">@user</div>
                 </div>
                 <div class="stats-group">
                     <div class="stat-item"><div class="number empty">—</div><div class="label">Приглашено</div></div>
@@ -695,9 +629,9 @@
         <!-- ПРОФИЛЬ -->
         <div class="page" id="page-profile">
             <div class="profile-stats" style="flex:1; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:30px;">
-                <div class="profile-avatar" style="width:100px;height:100px;font-size:48px;">R</div>
-                <div style="font-size:28px;font-weight:700;color:#fff;" id="profileDisplayName">Blackbox_User</div>
-                <div style="color:rgba(255,255,255,0.3);">@blackbox_research</div>
+                <div class="profile-avatar" style="width:100px;height:100px;font-size:48px;" id="profileAvatarLetter">R</div>
+                <div style="font-size:28px;font-weight:700;color:#fff;" id="profileDisplayName">Загрузка...</div>
+                <div style="color:rgba(255,255,255,0.3);" id="profileHandle">@user</div>
                 <div style="display:flex;gap:40px;margin-top:12px;">
                     <div><span style="color:rgba(255,255,255,0.3);">Приглашено</span><br><span style="font-size:24px;color:#ff5e5e;">—</span></div>
                     <div><span style="color:rgba(255,255,255,0.3);">Баланс</span><br><span style="font-size:24px;color:#ff5e5e;">₿ 0.82</span></div>
@@ -749,20 +683,24 @@
                 <div class="settings-grid">
                     <div class="setting-toggle">
                         <span><i class="fas fa-moon" style="margin-right:6px;"></i> Тёмная тема</span>
-                        <div class="toggle-switch active" data-toggle="theme"></div>
+                        <div class="toggle-switch active" id="themeToggle" data-toggle="theme"></div>
                     </div>
                     <div class="setting-toggle">
                         <span><i class="fas fa-bell" style="margin-right:6px;"></i> Уведомления</span>
-                        <div class="toggle-switch" data-toggle="notif"></div>
+                        <div class="toggle-switch active" id="notifToggle" data-toggle="notif"></div>
+                    </div>
+                    <div class="setting-toggle">
+                        <span><i class="fas fa-lock" style="margin-right:6px;"></i> Сменить пароль</span>
+                        <button id="changePassBtn" style="background:#ff3b3b; border:none; color:#fff; padding:4px 16px; border-radius:40px; font-weight:600; cursor:pointer;">Изменить</button>
                     </div>
                     <div class="setting-toggle">
                         <span><i class="fas fa-globe" style="margin-right:6px;"></i> Язык</span>
                         <span style="color:#ff6b6b; font-weight:500;">RU</span>
                     </div>
-                    <div class="setting-toggle">
-                        <span><i class="fas fa-shield-alt" style="margin-right:6px;"></i> 2FA</span>
-                        <div class="toggle-switch active" data-toggle="2fa"></div>
-                    </div>
+                </div>
+                <div id="passChangeArea" style="display:none; margin-top:16px; padding:16px; background:rgba(0,0,0,0.1); border-radius:20px;">
+                    <input type="password" id="newPassInput" placeholder="Новый пароль" style="background:rgba(0,0,0,0.2); border:1px solid #ff3b3b; padding:10px; border-radius:40px; color:#fff; width:100%; outline:none; font-family:'Inter', sans-serif;">
+                    <button id="savePassBtn" style="margin-top:10px; background:#ff3b3b; border:none; color:#fff; padding:10px; border-radius:40px; width:100%; font-weight:600; cursor:pointer;">Сохранить пароль</button>
                 </div>
             </div>
         </div>
@@ -783,6 +721,45 @@
     (function() {
         'use strict';
 
+        // ----- ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ ИЗ TELEGRAM -----
+        let userData = {};
+        if (window.Telegram && Telegram.WebApp) {
+            const user = Telegram.WebApp.initDataUnsafe.user;
+            if (user) {
+                userData = {
+                    id: user.id,
+                    firstName: user.first_name || 'User',
+                    lastName: user.last_name || '',
+                    username: user.username || 'user',
+                    languageCode: user.language_code || 'ru'
+                };
+            }
+        }
+
+        // Отображаем данные
+        const displayName = document.getElementById('displayName');
+        const profileDisplayName = document.getElementById('profileDisplayName');
+        const userHandle = document.getElementById('userHandle');
+        const profileHandle = document.getElementById('profileHandle');
+        const avatarLetter = document.getElementById('avatarLetter');
+        const profileAvatarLetter = document.getElementById('profileAvatarLetter');
+
+        const fullName = userData.firstName + (userData.lastName ? ' ' + userData.lastName : '');
+        displayName.textContent = fullName || 'Ryzen User';
+        profileDisplayName.textContent = fullName || 'Ryzen User';
+        const handle = userData.username ? '@' + userData.username : '@user';
+        userHandle.textContent = handle;
+        profileHandle.textContent = handle;
+        const letter = (userData.firstName ? userData.firstName[0] : 'R').toUpperCase();
+        avatarLetter.textContent = letter;
+        profileAvatarLetter.textContent = letter;
+
+        // Сохраняем в localStorage для возможности редактирования
+        if (fullName) {
+            localStorage.setItem('userName', fullName);
+        }
+
+        // ----- ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ -----
         const navItems = document.querySelectorAll('.bottom-nav .nav-item');
         const pages = {
             home: document.getElementById('page-home'),
@@ -809,6 +786,7 @@
             });
         });
 
+        // ----- ЗАМЕНА ОБЛОЖКИ -----
         const coverInput = document.getElementById('coverUpload');
         const changeCoverBtn = document.getElementById('changeCoverBtn');
         const coverImage = document.getElementById('coverImage');
@@ -829,10 +807,9 @@
         const savedCover = localStorage.getItem('coverImage');
         if (savedCover && coverImage) coverImage.src = savedCover;
 
-        const displayName = document.getElementById('displayName');
+        // ----- РЕДАКТИРОВАНИЕ ИМЕНИ -----
         const nameInput = document.getElementById('nameInput');
         const editIcon = document.getElementById('editNameIcon');
-        const profileDisplayName = document.getElementById('profileDisplayName');
 
         function saveName(name) {
             displayName.textContent = name;
@@ -853,7 +830,7 @@
         if (nameInput) {
             nameInput.addEventListener('blur', function() {
                 const val = this.value.trim();
-                saveName(val || 'Blackbox_User');
+                saveName(val || 'Ryzen User');
             });
             nameInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') this.blur();
@@ -865,10 +842,60 @@
             profileDisplayName.textContent = savedName;
         }
 
-        document.querySelectorAll('.toggle-switch').forEach(t => {
-            t.addEventListener('click', function() { this.classList.toggle('active'); });
+        // ----- ТОГГЛЫ (настройки) -----
+        const themeToggle = document.getElementById('themeToggle');
+        const notifToggle = document.getElementById('notifToggle');
+
+        // Тема
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light');
+            themeToggle.classList.remove('active');
+        } else {
+            document.body.classList.remove('light');
+            themeToggle.classList.add('active');
+        }
+        themeToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            document.body.classList.toggle('light');
+            localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
         });
 
+        // Уведомления
+        const savedNotif = localStorage.getItem('notifications');
+        if (savedNotif === 'off') {
+            notifToggle.classList.remove('active');
+        } else {
+            notifToggle.classList.add('active');
+        }
+        notifToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            localStorage.setItem('notifications', this.classList.contains('active') ? 'on' : 'off');
+            showToast(this.classList.contains('active') ? '🔔 Уведомления включены' : '🔕 Уведомления выключены');
+        });
+
+        // Смена пароля (заглушка)
+        const changePassBtn = document.getElementById('changePassBtn');
+        const passArea = document.getElementById('passChangeArea');
+        const newPassInput = document.getElementById('newPassInput');
+        const savePassBtn = document.getElementById('savePassBtn');
+
+        changePassBtn.addEventListener('click', function() {
+            passArea.style.display = passArea.style.display === 'none' ? 'block' : 'none';
+        });
+        savePassBtn.addEventListener('click', function() {
+            const pass = newPassInput.value.trim();
+            if (pass.length < 4) {
+                showToast('⚠️ Пароль должен быть не менее 4 символов.', '#ff9800');
+                return;
+            }
+            localStorage.setItem('adminPassword', pass);
+            showToast('✅ Пароль сохранён!', '#4caf50');
+            passArea.style.display = 'none';
+            newPassInput.value = '';
+        });
+
+        // ----- TOAST -----
         function showToast(message, color = '#4caf50') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -883,6 +910,7 @@
             }, 4000);
         }
 
+        // ----- ОТПРАВКА ЗАЯВКИ В БОТА -----
         const payoutBtn = document.getElementById('payoutBtn');
         const payoutNft = document.getElementById('payoutNft');
         const payoutWallet = document.getElementById('payoutWallet');
