@@ -6,7 +6,7 @@
     <title>Ryzen Team · Work Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
     <style>
         /* ----- RESET & BASE ----- */
         * {
@@ -33,13 +33,123 @@
             background: radial-gradient(circle at 30% 20%, #e8e0e0, #c8c0c0);
         }
 
-        /* ----- ОСНОВНАЯ ПАНЕЛЬ (НА ВЕСЬ ЭКРАН) ----- */
+        /* ========== PRELOADER ========== */
+        #preloader {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease, visibility 1s ease;
+            background: radial-gradient(circle at 30% 20%, #1f0a0a, #050505 95%);
+        }
+        #preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .preloader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            position: relative;
+        }
+        /* Ракета */
+        .rocket-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .rocket {
+            font-size: 80px;
+            color: #ff3b3b;
+            animation: rocketFly 2.5s ease-in-out infinite;
+            filter: drop-shadow(0 0 40px rgba(255, 0, 0, 0.3));
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .rocket-trail {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 60px;
+            background: linear-gradient(to bottom, #ff3b3b, transparent);
+            border-radius: 10px;
+            animation: trailPulse 1s ease-in-out infinite;
+        }
+        @keyframes rocketFly {
+            0% { transform: translate(-50%, -50%) rotate(-45deg) scale(1); }
+            50% { transform: translate(-50%, -70%) rotate(-45deg) scale(1.05); }
+            100% { transform: translate(-50%, -50%) rotate(-45deg) scale(1); }
+        }
+        @keyframes trailPulse {
+            0%, 100% { opacity: 1; height: 60px; }
+            50% { opacity: 0.4; height: 40px; }
+        }
+        /* Прогресс-бар */
+        .progress-container {
+            width: 320px;
+            max-width: 80vw;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 70, 70, 0.1);
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff3b3b, #ff6b6b);
+            border-radius: 10px;
+            transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+        }
+        .progress-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            font-variant-numeric: tabular-nums;
+        }
+        .progress-text span {
+            color: #ff3b3b;
+        }
+        .preloader-sub {
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 13px;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        body.light #preloader {
+            background: radial-gradient(circle at 30% 20%, #e8e0e0, #c8c0c0);
+        }
+        body.light .progress-text { color: rgba(0, 0, 0, 0.6); }
+        body.light .preloader-sub { color: rgba(0, 0, 0, 0.15); }
+
+        /* ========== ОСНОВНАЯ ПАНЕЛЬ (НА ВЕСЬ ЭКРАН) ========== */
         .glass-panel {
             position: fixed;
             inset: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(20, 20, 30, 0.22);
+            background: rgba(20, 20, 30, 0.20);
             backdrop-filter: blur(32px) saturate(220%);
             -webkit-backdrop-filter: blur(32px) saturate(220%);
             border: none;
@@ -49,9 +159,14 @@
             flex-direction: column;
             overflow: hidden;
             transition: background 0.5s ease;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+        .glass-panel.visible {
+            opacity: 1;
         }
         body.light .glass-panel {
-            background: rgba(255, 255, 255, 0.20);
+            background: rgba(255, 255, 255, 0.18);
         }
 
         /* ----- АНИМИРОВАННЫЙ ФОН (GLOW) ----- */
@@ -73,20 +188,20 @@
             z-index: 1;
         }
 
-        /* ----- ВЕРХНЯЯ ПЛАНКА ----- */
+        /* ========== ВЕРХНЯЯ ПЛАНКА ========== */
         .top-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 18px 28px;
             border-bottom: 1px solid rgba(255, 70, 70, 0.06);
-            background: rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.12);
             backdrop-filter: blur(8px);
             flex-shrink: 0;
         }
         body.light .top-bar {
             border-bottom-color: rgba(0, 0, 0, 0.04);
-            background: rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.08);
         }
         .top-bar .brand {
             font-size: 28px;
@@ -105,34 +220,126 @@
             font-weight: 400;
             font-size: 13px;
             -webkit-text-fill-color: initial;
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.15);
             margin-left: 8px;
         }
         body.light .top-bar .brand small {
-            color: rgba(0, 0, 0, 0.3);
-        }
-        .top-bar .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 14px;
-        }
-        body.light .top-bar .user-badge {
-            color: rgba(0, 0, 0, 0.5);
-        }
-        .top-bar .user-badge i {
-            color: #4caf50;
-            font-size: 12px;
-            animation: pulseDot 2s infinite;
-        }
-        @keyframes pulseDot {
-            0%,
-            100% { opacity: 1; }
-            50% { opacity: 0.3; }
+            color: rgba(0, 0, 0, 0.25);
         }
 
-        /* ----- ОСНОВНОЙ КОНТЕНТ (FULL) ----- */
+        /* ===== БУРГЕР-МЕНЮ (вместо "онлайн") ===== */
+        .burger-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .burger-menu:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        body.light .burger-menu:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        .burger-line {
+            width: 28px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform-origin: center;
+        }
+        body.light .burger-line {
+            background: rgba(0, 0, 0, 0.6);
+        }
+        .burger-menu.active .burger-line:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 6px);
+        }
+        .burger-menu.active .burger-line:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+        .burger-menu.active .burger-line:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -6px);
+        }
+
+        /* ===== ВЫПАДАЮЩЕЕ МЕНЮ (бургер) ===== */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 12px;
+            background: rgba(16, 16, 20, 0.92);
+            backdrop-filter: blur(24px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 70, 70, 0.08);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            padding: 8px 0;
+            min-width: 200px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: dropdownIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .dropdown-menu.open {
+            display: flex;
+        }
+        @keyframes dropdownIn {
+            0% { opacity: 0; transform: translateY(-10px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        body.light .dropdown-menu {
+            background: rgba(240, 240, 245, 0.92);
+            border-color: rgba(0, 0, 0, 0.06);
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 22px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: 'Inter', sans-serif;
+        }
+        .dropdown-item:hover {
+            background: rgba(255, 70, 70, 0.06);
+            color: #fff;
+        }
+        .dropdown-item i {
+            font-size: 20px;
+            color: #ff3b3b;
+            width: 28px;
+            text-align: center;
+        }
+        body.light .dropdown-item {
+            color: rgba(0, 0, 0, 0.7);
+        }
+        body.light .dropdown-item:hover {
+            background: rgba(0, 0, 0, 0.04);
+            color: #1a1a1a;
+        }
+        .dropdown-item .badge {
+            margin-left: auto;
+            background: #ff3b3b;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-weight: 700;
+        }
+
+        /* ========== ОСНОВНОЙ КОНТЕНТ ========== */
         .main-content {
             flex: 1;
             position: relative;
@@ -159,7 +366,7 @@
         .page::-webkit-scrollbar-track { background: transparent; }
         .page::-webkit-scrollbar-thumb { background: rgba(255, 70, 70, 0.3); border-radius: 10px; }
 
-        /* ----- ОБЛОЖКА (С УЛУЧШЕННОЙ МАСКОЙ) ----- */
+        /* ========== ОБЛОЖКА ========== */
         .cover-area {
             position: relative;
             border-radius: 32px;
@@ -167,8 +374,8 @@
             height: 220px;
             min-height: 160px;
             background: radial-gradient(circle at 30% 30%, #3d1a1a, #0a0202);
-            border: 1px solid rgba(255, 70, 70, 0.12);
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 70, 70, 0.10);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
             flex-shrink: 0;
         }
         body.light .cover-area {
@@ -184,7 +391,7 @@
             -webkit-mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 92%);
             mix-blend-mode: multiply;
             animation: float 8s ease-in-out infinite;
-            filter: drop-shadow(0 0 40px rgba(255, 0, 0, 0.2));
+            filter: drop-shadow(0 0 40px rgba(255, 0, 0, 0.15));
         }
         @keyframes float {
             0%, 100% { transform: translateY(0) scale(1); }
@@ -200,7 +407,7 @@
             border-radius: 60px;
             font-size: 14px;
             color: #fff;
-            border: 1px solid rgba(255, 70, 70, 0.2);
+            border: 1px solid rgba(255, 70, 70, 0.15);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -219,7 +426,7 @@
         .cover-overlay button {
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             color: #fff;
             padding: 8px 22px;
             border-radius: 60px;
@@ -235,22 +442,22 @@
         }
         #coverUpload { display: none; }
 
-        /* ----- ПРОФИЛЬ И СТАТИСТИКА ----- */
+        /* ========== ПРОФИЛЬ И СТАТИСТИКА ========== */
         .profile-stats {
             display: flex;
             align-items: center;
             gap: 20px;
             flex-wrap: wrap;
-            background: rgba(0, 0, 0, 0.20);
+            background: rgba(0, 0, 0, 0.18);
             backdrop-filter: blur(12px);
             border-radius: 40px;
             padding: 16px 28px;
-            border: 1px solid rgba(255, 70, 70, 0.06);
+            border: 1px solid rgba(255, 70, 70, 0.04);
             flex-shrink: 0;
             transition: all 0.4s ease;
         }
         body.light .profile-stats {
-            background: rgba(255, 255, 255, 0.20);
+            background: rgba(255, 255, 255, 0.18);
             border-color: rgba(0, 0, 0, 0.04);
         }
         .profile-avatar {
@@ -264,8 +471,8 @@
             font-size: 30px;
             font-weight: 700;
             color: #fff;
-            box-shadow: 0 0 60px rgba(255, 0, 0, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 60px rgba(255, 0, 0, 0.12);
+            border: 2px solid rgba(255, 255, 255, 0.04);
             flex-shrink: 0;
             overflow: hidden;
         }
@@ -326,15 +533,15 @@
             line-height: 1.2;
             transition: all 0.5s ease;
         }
-        .stat-item .number.empty { color: rgba(255, 255, 255, 0.1); }
-        body.light .stat-item .number.empty { color: rgba(0, 0, 0, 0.1); }
+        .stat-item .number.empty { color: rgba(255, 255, 255, 0.08); }
+        body.light .stat-item .number.empty { color: rgba(0, 0, 0, 0.08); }
         .stat-item .label {
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.25);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        body.light .stat-item .label { color: rgba(0, 0, 0, 0.3); }
+        body.light .stat-item .label { color: rgba(0, 0, 0, 0.25); }
         .balance-update {
             animation: balancePop 0.6s ease;
         }
@@ -344,18 +551,18 @@
             100% { transform: scale(1); }
         }
 
-        /* ----- ВИДЖЕТЫ ----- */
+        /* ========== ВИДЖЕТЫ ========== */
         .widgets-row {
             display: flex;
             gap: 14px;
             flex-wrap: wrap;
         }
         .widget-item {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(8px);
             border-radius: 24px;
             padding: 12px 20px;
-            border: 1px solid rgba(255, 70, 70, 0.06);
+            border: 1px solid rgba(255, 70, 70, 0.04);
             flex: 1;
             min-width: 100px;
             display: flex;
@@ -364,41 +571,41 @@
             transition: all 0.3s ease;
         }
         .widget-item:hover {
-            background: rgba(255, 70, 70, 0.06);
+            background: rgba(255, 70, 70, 0.05);
             transform: translateY(-4px) scale(1.02);
-            border-color: rgba(255, 70, 70, 0.2);
+            border-color: rgba(255, 70, 70, 0.15);
         }
-        .widget-item i { font-size: 26px; color: #ff6b6b; opacity: 0.7; }
+        .widget-item i { font-size: 26px; color: #ff6b6b; opacity: 0.6; }
         .widget-item .w-text {
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.5);
         }
-        body.light .widget-item .w-text { color: rgba(0, 0, 0, 0.6); }
+        body.light .widget-item .w-text { color: rgba(0, 0, 0, 0.5); }
         .widget-item .w-text strong {
             color: #fff;
             font-weight: 600;
         }
         body.light .widget-item .w-text strong { color: #1a1a1a; }
 
-        /* ----- КАРТОЧКИ (СТЕКЛО) ----- */
+        /* ========== КАРТОЧКИ (СТЕКЛО) ========== */
         .glass-card {
-            background: rgba(20, 20, 30, 0.20);
+            background: rgba(20, 20, 30, 0.18);
             backdrop-filter: blur(16px);
             border-radius: 32px;
-            border: 1px solid rgba(255, 70, 70, 0.06);
+            border: 1px solid rgba(255, 70, 70, 0.04);
             padding: 24px;
             display: flex;
             flex-direction: column;
             transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
         }
         .glass-card:hover {
-            border-color: rgba(255, 70, 70, 0.15);
+            border-color: rgba(255, 70, 70, 0.12);
             transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
         }
         body.light .glass-card {
-            background: rgba(255, 255, 255, 0.20);
+            background: rgba(255, 255, 255, 0.18);
             border-color: rgba(0, 0, 0, 0.04);
         }
         .card-header {
@@ -416,17 +623,17 @@
         body.light .card-header h3 { color: #1a1a1a; }
         .card-header h3 i { margin-right: 10px; color: #ff3b3b; }
 
-        /* ----- НАСТАВНИКИ (ПУСТО) ----- */
+        /* ========== НАСТАВНИКИ (ПУСТО) ========== */
         .empty-mentors {
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.15);
             font-size: 16px;
             text-align: center;
             padding: 40px 0;
         }
-        .empty-mentors i { font-size: 36px; display: block; margin-bottom: 12px; opacity: 0.2; }
-        body.light .empty-mentors { color: rgba(0, 0, 0, 0.2); }
+        .empty-mentors i { font-size: 36px; display: block; margin-bottom: 12px; opacity: 0.15; }
+        body.light .empty-mentors { color: rgba(0, 0, 0, 0.15); }
 
-        /* ----- НАСТРОЙКИ ----- */
+        /* ========== НАСТРОЙКИ ========== */
         .settings-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -437,13 +644,13 @@
             align-items: center;
             justify-content: space-between;
             padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.12);
+            background: rgba(0, 0, 0, 0.10);
             border-radius: 18px;
             border: 1px solid rgba(255, 255, 255, 0.02);
             transition: 0.3s;
         }
         body.light .setting-toggle {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.10);
             border-color: rgba(0, 0, 0, 0.02);
         }
         .setting-toggle span {
@@ -454,15 +661,15 @@
         .toggle-switch {
             width: 44px;
             height: 24px;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
             border-radius: 40px;
             position: relative;
             cursor: pointer;
             transition: 0.3s;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.02);
         }
-        body.light .toggle-switch { background: rgba(0, 0, 0, 0.08); }
-        .toggle-switch.active { background: #ff3b3b; box-shadow: 0 0 20px rgba(255, 0, 0, 0.2); }
+        body.light .toggle-switch { background: rgba(0, 0, 0, 0.06); }
+        .toggle-switch.active { background: #ff3b3b; box-shadow: 0 0 20px rgba(255, 0, 0, 0.15); }
         .toggle-switch::after {
             content: '';
             position: absolute;
@@ -476,7 +683,7 @@
         }
         .toggle-switch.active::after { left: 22px; }
 
-        /* ----- ФОРМА ВЫПЛАТ ----- */
+        /* ========== ФОРМА ВЫПЛАТ ========== */
         .payout-form {
             display: flex;
             flex-direction: column;
@@ -490,15 +697,15 @@
         }
         .payout-form label {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.35);
+            color: rgba(255, 255, 255, 0.30);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        body.light .payout-form label { color: rgba(0, 0, 0, 0.35); }
+        body.light .payout-form label { color: rgba(0, 0, 0, 0.30); }
         .payout-form input,
         .payout-form select {
-            background: rgba(0, 0, 0, 0.20);
-            border: 1px solid rgba(255, 70, 70, 0.08);
+            background: rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(255, 70, 70, 0.06);
             border-radius: 16px;
             padding: 12px 18px;
             font-family: 'Inter', sans-serif;
@@ -509,19 +716,19 @@
         }
         body.light .payout-form input,
         body.light .payout-form select {
-            background: rgba(255, 255, 255, 0.20);
-            border-color: rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(0, 0, 0, 0.06);
             color: #1a1a1a;
         }
         .payout-form input:focus,
         .payout-form select:focus {
             border-color: #ff3b3b;
-            box-shadow: 0 0 24px rgba(255, 0, 0, 0.05);
+            box-shadow: 0 0 24px rgba(255, 0, 0, 0.04);
         }
         .payout-form input::placeholder {
-            color: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.12);
         }
-        body.light .payout-form input::placeholder { color: rgba(0, 0, 0, 0.15); }
+        body.light .payout-form input::placeholder { color: rgba(0, 0, 0, 0.12); }
         .payout-form select option { background: #1a1a1a; }
         body.light .payout-form select option { background: #f5f5f5; }
 
@@ -535,18 +742,18 @@
             color: #fff;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 40px rgba(255, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: 0 8px 40px rgba(255, 0, 0, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.02);
             letter-spacing: 0.5px;
         }
         .btn-payout:hover {
             transform: scale(1.02) translateY(-2px);
-            box-shadow: 0 12px 48px rgba(255, 0, 0, 0.25);
+            box-shadow: 0 12px 48px rgba(255, 0, 0, 0.20);
             background: linear-gradient(135deg, #ff4d4d, #c62828);
         }
         .btn-payout:active { transform: scale(0.97); }
 
-        /* ----- АДМИНКА (встроенная) ----- */
+        /* ========== АДМИНКА ========== */
         .admin-panel {
             display: flex;
             flex-direction: column;
@@ -557,19 +764,19 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.12);
             border-radius: 20px;
             padding: 14px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.02);
             transition: 0.3s;
         }
         .admin-request:hover { background: rgba(255, 70, 70, 0.04); }
         .admin-request .info {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.6);
             font-size: 14px;
         }
         .admin-request .info strong { color: #fff; }
-        body.light .admin-request .info { color: rgba(0, 0, 0, 0.7); }
+        body.light .admin-request .info { color: rgba(0, 0, 0, 0.6); }
         body.light .admin-request .info strong { color: #1a1a1a; }
         .admin-request .actions {
             display: flex;
@@ -595,35 +802,35 @@
         }
         .admin-request .actions .reject:hover { background: #ef5350; transform: scale(1.05); }
         .admin-empty {
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.15);
             text-align: center;
             padding: 30px 0;
         }
-        body.light .admin-empty { color: rgba(0, 0, 0, 0.2); }
+        body.light .admin-empty { color: rgba(0, 0, 0, 0.15); }
 
-        /* ----- НИЖНЯЯ НАВИГАЦИЯ ----- */
+        /* ========== НИЖНЯЯ НАВИГАЦИЯ ========== */
         .bottom-nav {
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 10px 16px 18px 16px;
-            background: rgba(0, 0, 0, 0.25);
+            background: rgba(0, 0, 0, 0.20);
             backdrop-filter: blur(16px);
-            border-top: 1px solid rgba(255, 70, 70, 0.04);
+            border-top: 1px solid rgba(255, 70, 70, 0.03);
             flex-shrink: 0;
             gap: 8px;
             flex-wrap: wrap;
         }
         body.light .bottom-nav {
-            background: rgba(255, 255, 255, 0.25);
-            border-top-color: rgba(0, 0, 0, 0.04);
+            background: rgba(255, 255, 255, 0.20);
+            border-top-color: rgba(0, 0, 0, 0.03);
         }
         .bottom-nav .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.20);
             font-size: 10px;
             font-weight: 500;
             transition: all 0.3s ease;
@@ -636,7 +843,7 @@
             min-width: 64px;
             position: relative;
         }
-        body.light .bottom-nav .nav-item { color: rgba(0, 0, 0, 0.25); }
+        body.light .bottom-nav .nav-item { color: rgba(0, 0, 0, 0.20); }
         .bottom-nav .nav-item i {
             font-size: 24px;
             transition: 0.3s;
@@ -648,23 +855,23 @@
         }
         .bottom-nav .nav-item.active {
             color: #ff3b3b;
-            background: rgba(255, 50, 50, 0.08);
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.03);
+            background: rgba(255, 50, 50, 0.06);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.02);
         }
         .bottom-nav .nav-item.active i {
-            text-shadow: 0 0 40px rgba(255, 0, 0, 0.15);
+            text-shadow: 0 0 40px rgba(255, 0, 0, 0.10);
         }
         .bottom-nav .nav-item:hover {
             color: #fff;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             transform: translateY(-3px);
         }
         body.light .bottom-nav .nav-item:hover {
             color: #1a1a1a;
-            background: rgba(0, 0, 0, 0.03);
+            background: rgba(0, 0, 0, 0.02);
         }
 
-        /* ----- TOAST ----- */
+        /* ========== TOAST ========== */
         .toast-container {
             position: fixed;
             bottom: 100px;
@@ -684,7 +891,7 @@
             border-radius: 60px;
             color: #fff;
             font-weight: 500;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
             box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8);
             font-family: 'Inter', sans-serif;
             letter-spacing: 0.3px;
@@ -699,7 +906,7 @@
             100% { opacity: 1; transform: translateY(0); }
         }
 
-        /* ----- АДАПТИВ ----- */
+        /* ========== АДАПТИВ ========== */
         @media (max-width: 768px) {
             .top-bar { padding: 14px 18px; flex-wrap: wrap; gap: 6px; }
             .top-bar .brand { font-size: 22px; }
@@ -717,6 +924,9 @@
             .bottom-nav .nav-item { min-width: 50px; padding: 4px 12px; }
             .bottom-nav .nav-item i { font-size: 20px; }
             .bottom-nav .nav-item span { font-size: 8px; }
+            .burger-menu { padding: 4px 8px; }
+            .burger-line { width: 24px; height: 2.5px; }
+            .dropdown-menu { min-width: 160px; right: -10px; }
         }
         @media (max-width: 480px) {
             .top-bar .brand { font-size: 18px; }
@@ -730,15 +940,53 @@
             .bottom-nav .nav-item { min-width: 42px; padding: 2px 8px; }
             .bottom-nav .nav-item i { font-size: 18px; }
             .bottom-nav .nav-item span { display: none; }
+            .burger-line { width: 20px; height: 2px; }
+            .dropdown-menu { min-width: 140px; right: -6px; }
+            .dropdown-item { padding: 10px 16px; font-size: 13px; }
         }
     </style>
 </head>
 <body>
+
+    <!-- ===== PRELOADER ===== -->
+    <div id="preloader">
+        <div class="preloader-content">
+            <div class="rocket-container">
+                <div class="rocket"><i class="fas fa-rocket"></i></div>
+                <div class="rocket-trail"></div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width:0%;"></div>
+                </div>
+                <div class="progress-text">LOADING <span id="progressPercent">0</span>%</div>
+            </div>
+            <div class="preloader-sub">Ryzen Team · work panel</div>
+        </div>
+    </div>
+
+    <!-- ===== ОСНОВНАЯ ПАНЕЛЬ ===== -->
     <div class="glass-panel" id="panel">
 
         <div class="top-bar">
             <div class="brand"><i class="fas fa-bolt"></i> Ryzen <span style="-webkit-text-fill-color:initial;color:#fff;">Team</span> <small>· work panel</small></div>
-            <div class="user-badge"><i class="fas fa-circle"></i> <span>онлайн</span></div>
+            <div style="display:flex;align-items:center;gap:12px;position:relative;">
+                <!-- Бургер-меню вместо "онлайн" -->
+                <div class="burger-menu" id="burgerMenu">
+                    <div class="burger-line"></div>
+                    <div class="burger-line"></div>
+                    <div class="burger-line"></div>
+                </div>
+                <!-- Выпадающее меню -->
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <button class="dropdown-item" data-page="home"><i class="fas fa-home"></i> Главная</button>
+                    <button class="dropdown-item" data-page="profile"><i class="fas fa-user"></i> Профиль</button>
+                    <button class="dropdown-item" data-page="mentors"><i class="fas fa-users"></i> Наставники</button>
+                    <button class="dropdown-item" data-page="payout"><i class="fas fa-dollar-sign"></i> Выплаты</button>
+                    <button class="dropdown-item" data-page="settings"><i class="fas fa-cog"></i> Настройки</button>
+                    <button class="dropdown-item" id="adminDropdownBtn" data-page="admin" style="display:none;"><i class="fas fa-user-shield"></i> Админ-панель <span class="badge">🔒</span></button>
+                </div>
+            </div>
         </div>
 
         <div class="main-content" id="mainContent">
@@ -758,7 +1006,7 @@
                     <div class="profile-info">
                         <div class="name-wrap">
                             <span class="name" id="displayName">Загрузка...</span>
-                            <i class="fas fa-pencil-alt" id="editNameIcon" style="color:rgba(255,255,255,0.2); cursor:pointer; font-size:14px;"></i>
+                            <i class="fas fa-pencil-alt" id="editNameIcon" style="color:rgba(255,255,255,0.15); cursor:pointer; font-size:14px;"></i>
                             <input type="text" class="name-edit" id="nameInput" style="display:none;" maxlength="20">
                         </div>
                         <div class="handle" id="userHandle">@user</div>
@@ -770,9 +1018,9 @@
                     </div>
                 </div>
                 <div class="widgets-row">
-                    <div class="widget-item"><i class="fas fa-birthday-cake"></i><div class="w-text"><strong>B-Day</strong><br><span style="font-size:11px; color:rgba(255,255,255,0.2);">14 мая</span></div></div>
-                    <div class="widget-item"><i class="fas fa-hat-wizard"></i><div class="w-text"><strong>Durov Caps</strong><br><span style="font-size:11px; color:rgba(255,255,255,0.2);">3 шт.</span></div></div>
-                    <div class="widget-item"><i class="fas fa-rocket"></i><div class="w-text"><strong>Boost</strong><br><span style="font-size:11px; color:rgba(255,255,255,0.2);">активен</span></div></div>
+                    <div class="widget-item"><i class="fas fa-birthday-cake"></i><div class="w-text"><strong>B-Day</strong><br><span style="font-size:11px; opacity:0.3;">14 мая</span></div></div>
+                    <div class="widget-item"><i class="fas fa-hat-wizard"></i><div class="w-text"><strong>Durov Caps</strong><br><span style="font-size:11px; opacity:0.3;">3 шт.</span></div></div>
+                    <div class="widget-item"><i class="fas fa-rocket"></i><div class="w-text"><strong>Boost</strong><br><span style="font-size:11px; opacity:0.3;">активен</span></div></div>
                 </div>
             </div>
 
@@ -781,20 +1029,20 @@
                 <div class="profile-stats" style="flex:1; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:30px;">
                     <div class="profile-avatar" style="width:100px;height:100px;font-size:48px;" id="profileAvatarContainer"><span id="profileAvatarLetter">R</span></div>
                     <div style="font-size:28px;font-weight:700;color:#fff;" id="profileDisplayName">Загрузка...</div>
-                    <div style="color:rgba(255,255,255,0.3);" id="profileHandle">@user</div>
+                    <div style="color:rgba(255,255,255,0.25);" id="profileHandle">@user</div>
                     <div style="display:flex;gap:40px;margin-top:12px;">
-                        <div><span style="color:rgba(255,255,255,0.3);">Приглашено</span><br><span style="font-size:24px;color:#ff5e5e;">—</span></div>
-                        <div><span style="color:rgba(255,255,255,0.3);">Баланс</span><br><span style="font-size:24px;color:#ff5e5e;" id="profileBalance">0.00</span></div>
-                        <div><span style="color:rgba(255,255,255,0.3);">Рейтинг</span><br><span style="font-size:24px;color:#ff5e5e;">★ 4.9</span></div>
+                        <div><span style="color:rgba(255,255,255,0.25);">Приглашено</span><br><span style="font-size:24px;color:#ff5e5e;">—</span></div>
+                        <div><span style="color:rgba(255,255,255,0.25);">Баланс</span><br><span style="font-size:24px;color:#ff5e5e;" id="profileBalance">0.00</span></div>
+                        <div><span style="color:rgba(255,255,255,0.25);">Рейтинг</span><br><span style="font-size:24px;color:#ff5e5e;">★ 4.9</span></div>
                     </div>
                 </div>
             </div>
 
             <!-- ===== СТРАНИЦА: НАСТАВНИКИ ===== -->
             <div class="page" id="page-mentors">
-                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:rgba(0,0,0,0.10); border-radius:32px; border:1px solid rgba(255,70,70,0.04);">
-                    <i class="fas fa-user-slash" style="font-size:48px; color:rgba(255,255,255,0.08);"></i>
-                    <span style="color:rgba(255,255,255,0.2); font-size:18px;">Пока что нету</span>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:rgba(0,0,0,0.08); border-radius:32px; border:1px solid rgba(255,70,70,0.03);">
+                    <i class="fas fa-user-slash" style="font-size:48px; color:rgba(255,255,255,0.06);"></i>
+                    <span style="color:rgba(255,255,255,0.15); font-size:18px;">Пока что нету</span>
                 </div>
             </div>
 
@@ -803,7 +1051,7 @@
                 <div class="glass-card">
                     <div class="card-header">
                         <h3><i class="fas fa-hand-holding-usd"></i> Запрос на выплату</h3>
-                        <span style="color:rgba(255,255,255,0.15);"><i class="fas fa-wallet"></i></span>
+                        <span style="color:rgba(255,255,255,0.10);"><i class="fas fa-wallet"></i></span>
                     </div>
                     <div class="payout-form">
                         <div class="form-row">
@@ -828,7 +1076,7 @@
                 <div class="glass-card">
                     <div class="card-header">
                         <h3><i class="fas fa-sliders-h"></i> Настройки</h3>
-                        <span style="color:rgba(255,255,255,0.15);"><i class="fas fa-cog"></i></span>
+                        <span style="color:rgba(255,255,255,0.10);"><i class="fas fa-cog"></i></span>
                     </div>
                     <div class="settings-grid">
                         <div class="setting-toggle">
@@ -848,19 +1096,19 @@
                             <span style="color:#ff6b6b; font-weight:500;">RU</span>
                         </div>
                     </div>
-                    <div id="passChangeArea" style="display:none; margin-top:16px; padding:16px; background:rgba(0,0,0,0.10); border-radius:24px;">
-                        <input type="password" id="newPassInput" placeholder="Новый пароль" style="background:rgba(0,0,0,0.15); border:1px solid #ff3b3b; padding:12px; border-radius:40px; color:#fff; width:100%; outline:none; font-family:'Inter', sans-serif;">
+                    <div id="passChangeArea" style="display:none; margin-top:16px; padding:16px; background:rgba(0,0,0,0.08); border-radius:24px;">
+                        <input type="password" id="newPassInput" placeholder="Новый пароль" style="background:rgba(0,0,0,0.12); border:1px solid #ff3b3b; padding:12px; border-radius:40px; color:#fff; width:100%; outline:none; font-family:'Inter', sans-serif;">
                         <button id="savePassBtn" style="margin-top:10px; background:linear-gradient(135deg,#ff3b3b,#b71c1c); border:none; color:#fff; padding:12px; border-radius:40px; width:100%; font-weight:600; cursor:pointer;">Сохранить пароль</button>
                     </div>
                 </div>
             </div>
 
-            <!-- ===== СТРАНИЦА: АДМИНКА (ТОЛЬКО ДЛЯ АДМИНА) ===== -->
+            <!-- ===== СТРАНИЦА: АДМИНКА ===== -->
             <div class="page" id="page-admin">
                 <div class="glass-card" style="flex:1;">
                     <div class="card-header">
                         <h3><i class="fas fa-user-shield"></i> Админ-панель</h3>
-                        <span style="color:rgba(255,255,255,0.15);"><i class="fas fa-lock"></i></span>
+                        <span style="color:rgba(255,255,255,0.10);"><i class="fas fa-lock"></i></span>
                     </div>
                     <div class="admin-panel" id="adminPanel">
                         <div class="admin-empty">📭 Нет заявок на выплату</div>
@@ -886,7 +1134,49 @@
         (function() {
             'use strict';
 
-            // ----- ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ИЗ TELEGRAM -----
+            // ========== PRELOADER ==========
+            const preloader = document.getElementById('preloader');
+            const progressFill = document.getElementById('progressFill');
+            const progressPercent = document.getElementById('progressPercent');
+            const panel = document.getElementById('panel');
+
+            let progress = 0;
+            const steps = [0, 25, 50, 75, 100];
+            let stepIndex = 0;
+
+            function updateProgress() {
+                if (stepIndex >= steps.length) {
+                    // Завершаем загрузку
+                    preloader.classList.add('hidden');
+                    panel.classList.add('visible');
+                    return;
+                }
+                const target = steps[stepIndex];
+                const start = stepIndex === 0 ? 0 : steps[stepIndex - 1];
+                const duration = 600;
+                const startTime = performance.now();
+
+                function animateProgress(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress2 = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress2, 3);
+                    const currentValue = start + (target - start) * eased;
+                    progressFill.style.width = currentValue + '%';
+                    progressPercent.textContent = Math.round(currentValue);
+                    if (progress2 < 1) {
+                        requestAnimationFrame(animateProgress);
+                    } else {
+                        stepIndex++;
+                        setTimeout(updateProgress, 300);
+                    }
+                }
+                requestAnimationFrame(animateProgress);
+            }
+
+            // Запускаем загрузку
+            setTimeout(updateProgress, 400);
+
+            // ========== ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ==========
             let userData = {};
             let isAdmin = false;
             const ADMIN_ID = 8297446667;
@@ -904,11 +1194,12 @@
                     if (user.id == ADMIN_ID) {
                         isAdmin = true;
                         document.getElementById('adminNavBtn').style.display = 'flex';
+                        document.getElementById('adminDropdownBtn').style.display = 'flex';
                     }
                 }
             }
 
-            // ----- АВАТАРКА -----
+            // ========== АВАТАРКА ==========
             const avatarContainer = document.getElementById('avatarContainer');
             const profileAvatarContainer = document.getElementById('profileAvatarContainer');
             const avatarLetter = document.getElementById('avatarLetter');
@@ -931,7 +1222,7 @@
                 profileAvatarLetter.textContent = letter;
             }
 
-            // ----- ИМЯ И ЮЗЕРНЕЙМ -----
+            // ========== ИМЯ И ЮЗЕРНЕЙМ ==========
             const displayName = document.getElementById('displayName');
             const profileDisplayName = document.getElementById('profileDisplayName');
             const userHandle = document.getElementById('userHandle');
@@ -944,7 +1235,7 @@
             userHandle.textContent = handle;
             profileHandle.textContent = handle;
 
-            // ----- БАЛАНС -----
+            // ========== БАЛАНС ==========
             let currentBalance = parseFloat(localStorage.getItem('userBalance')) || 0;
             const balanceElement = document.getElementById('balanceDisplay');
             const profileBalanceElement = document.getElementById('profileBalance');
@@ -963,7 +1254,38 @@
             }
             updateBalanceUI(currentBalance);
 
-            // ----- ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ -----
+            // ========== БУРГЕР-МЕНЮ ==========
+            const burgerMenu = document.getElementById('burgerMenu');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+
+            burgerMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('active');
+                dropdownMenu.classList.toggle('open');
+            });
+
+            // Закрытие при клике вне меню
+            document.addEventListener('click', function(e) {
+                if (!burgerMenu.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    burgerMenu.classList.remove('active');
+                    dropdownMenu.classList.remove('open');
+                }
+            });
+
+            // Пункты выпадающего меню
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const page = this.dataset.page;
+                    if (page && pages[page]) {
+                        switchPage(page);
+                        // Закрываем меню
+                        burgerMenu.classList.remove('active');
+                        dropdownMenu.classList.remove('open');
+                    }
+                });
+            });
+
+            // ========== ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ ==========
             const navItems = document.querySelectorAll('.bottom-nav .nav-item');
             const pages = {
                 home: document.getElementById('page-home'),
@@ -981,6 +1303,9 @@
                     item.classList.remove('active');
                     if (item.dataset.page === pageId) item.classList.add('active');
                 });
+                // Закрываем меню
+                burgerMenu.classList.remove('active');
+                dropdownMenu.classList.remove('open');
             }
 
             navItems.forEach(item => {
@@ -991,7 +1316,7 @@
                 });
             });
 
-            // ----- ОБЛОЖКА -----
+            // ========== ОБЛОЖКА ==========
             const coverInput = document.getElementById('coverUpload');
             const changeCoverBtn = document.getElementById('changeCoverBtn');
             const coverImage = document.getElementById('coverImage');
@@ -1012,7 +1337,7 @@
             const savedCover = localStorage.getItem('coverImage');
             if (savedCover && coverImage) coverImage.src = savedCover;
 
-            // ----- РЕДАКТИРОВАНИЕ ИМЕНИ -----
+            // ========== РЕДАКТИРОВАНИЕ ИМЕНИ ==========
             const nameInput = document.getElementById('nameInput');
             const editIcon = document.getElementById('editNameIcon');
 
@@ -1045,7 +1370,7 @@
                 profileDisplayName.textContent = savedName;
             }
 
-            // ----- ТОГГЛЫ -----
+            // ========== ТОГГЛЫ ==========
             const themeToggle = document.getElementById('themeToggle');
             const notifToggle = document.getElementById('notifToggle');
             const savedTheme = localStorage.getItem('theme');
@@ -1067,7 +1392,7 @@
                 showToast(this.classList.contains('active') ? '🔔 Уведомления включены' : '🔕 Уведомления выключены');
             });
 
-            // ----- ПАРОЛЬ -----
+            // ========== ПАРОЛЬ ==========
             const changePassBtn = document.getElementById('changePassBtn');
             const passArea = document.getElementById('passChangeArea');
             const newPassInput = document.getElementById('newPassInput');
@@ -1083,7 +1408,7 @@
                 newPassInput.value = '';
             });
 
-            // ----- TOAST -----
+            // ========== TOAST ==========
             function showToast(message, color = '#4caf50') {
                 const container = document.getElementById('toastContainer');
                 const toast = document.createElement('div');
@@ -1098,7 +1423,7 @@
                 }, 4000);
             }
 
-            // ----- ОТПРАВКА ЗАЯВКИ В БОТА -----
+            // ========== ОТПРАВКА ЗАЯВКИ В БОТА ==========
             const payoutBtn = document.getElementById('payoutBtn');
             const payoutNft = document.getElementById('payoutNft');
             const payoutWallet = document.getElementById('payoutWallet');
@@ -1116,7 +1441,6 @@
                         Telegram.WebApp.sendData(data);
                         showToast('✅ Заявка отправлена!', '#4caf50');
                         payoutWallet.value = '';
-                        // Если админка открыта — обновляем список заявок
                         if (isAdmin && document.getElementById('page-admin').classList.contains('active')) {
                             loadAdminRequests();
                         }
@@ -1126,8 +1450,7 @@
                 });
             }
 
-            // ----- АДМИНКА: ЗАГРУЗКА ЗАЯВОК (имитация) -----
-            // В реальном проекте заявки приходят от бота, здесь мы храним их в localStorage для демонстрации
+            // ========== АДМИНКА ==========
             let adminRequests = JSON.parse(localStorage.getItem('adminRequests') || '[]');
 
             function loadAdminRequests() {
@@ -1143,7 +1466,7 @@
                     div.innerHTML = `
                         <div class="info">
                             <strong>${req.nft}</strong> · ${req.wallet} <br>
-                            <span style="font-size:12px; opacity:0.5;">${req.date}</span>
+                            <span style="font-size:12px; opacity:0.4;">${req.date}</span>
                         </div>
                         <div class="actions">
                             <button class="accept" data-index="${index}">✅ Принять</button>
@@ -1153,13 +1476,11 @@
                     panel.appendChild(div);
                 });
 
-                // Обработчики
                 panel.querySelectorAll('.accept').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const idx = parseInt(this.dataset.index);
                         const req = adminRequests[idx];
                         if (!req) return;
-                        // Имитация принятия
                         const amount = prompt('Введите сумму выплаты (ETH):', '0.1');
                         if (amount === null) return;
                         const val = parseFloat(amount);
@@ -1167,14 +1488,11 @@
                             showToast('⚠️ Некорректная сумма.', '#ff9800');
                             return;
                         }
-                        // Увеличиваем баланс
                         updateBalanceUI(currentBalance + val);
-                        // Удаляем заявку
                         adminRequests.splice(idx, 1);
                         localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
                         loadAdminRequests();
                         showToast(`✅ Выплата ${val} ETH принята!`, '#4caf50');
-                        // Отправка сообщения в группу (имитация)
                         sendToGroup(req.nft, val, req.wallet);
                     });
                 });
@@ -1189,19 +1507,14 @@
                 });
             }
 
-            // ----- ИМИТАЦИЯ ОТПРАВКИ В ГРУППУ (ШАБЛОН) -----
             function sendToGroup(nft, amount, wallet) {
                 const message =
                     `📢 *НОВАЯ ВЫПЛАТА В ГРУППЕ!*\n━━━━━━━━━━━━━━━━━━━\n🖼 NFT: ${nft}\n💰 Сумма: ${amount} ETH\n💳 Кошелёк: ${wallet}\n✅ Статус: Выплачена\n━━━━━━━━━━━━━━━━━━━\n#выплата #ryzenteam`;
-                // В реальном проекте здесь был бы API-запрос к боту, который отправляет сообщение в группу.
-                // Сейчас просто показываем тост.
                 showToast('📨 Сообщение отправлено в группу!', '#4caf50');
                 console.log('Сообщение в группу:\n', message);
             }
 
-            // Если пользователь админ — показываем админку и загружаем заявки
             if (isAdmin) {
-                // Добавляем тестовые заявки для демонстрации, если их нет
                 if (adminRequests.length === 0) {
                     adminRequests = [
                         { nft: 'Vintage Cigar #24057', wallet: 'EQD1234567890abcdef', date: new Date().toLocaleString() },
@@ -1209,33 +1522,23 @@
                     ];
                     localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
                 }
-                // При загрузке страницы заполняем админку
                 setTimeout(() => {
                     if (document.getElementById('page-admin').classList.contains('active')) {
                         loadAdminRequests();
                     }
-                }, 300);
-                // Также при переключении на админку
+                }, 400);
                 document.querySelector('[data-page="admin"]')?.addEventListener('click', function() {
                     setTimeout(loadAdminRequests, 200);
                 });
             }
 
-            // Если пришло обновление баланса из URL (тест)
+            // ========== ОБНОВЛЕНИЕ БАЛАНСА ИЗ URL ==========
             const urlParams = new URLSearchParams(window.location.search);
             const newBalance = parseFloat(urlParams.get('balance'));
             if (!isNaN(newBalance) && newBalance > 0) {
                 updateBalanceUI(currentBalance + newBalance);
                 showToast(`💰 Баланс пополнен на ${newBalance} ETH`, '#4caf50');
                 window.history.replaceState({}, document.title, window.location.pathname);
-            }
-
-            // ----- ПЕРЕХВАТ ЗАЯВОК ОТ БОТА (через WebApp) -----
-            // Если бот присылает данные через WebApp, обрабатываем
-            if (window.Telegram && Telegram.WebApp) {
-                Telegram.WebApp.onEvent('mainButtonClicked', function() {
-                    // Можно добавить логику
-                });
             }
 
             console.log('Ryzen Team Panel загружена. Админ:', isAdmin);
