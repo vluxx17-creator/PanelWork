@@ -8,54 +8,59 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <style>
+        /* ----- RESET & BASE ----- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        html,
         body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at 30% 10%, #1a0a0a, #050505 95%);
-            min-height: 100vh;
+            background: #0a0a0a;
+        }
+        body {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 12px;
+            background: radial-gradient(circle at 30% 20%, #1f0a0a, #050505 95%);
             transition: background 0.5s ease;
         }
         body.light {
-            background: radial-gradient(circle at 30% 10%, #f0e8e8, #d0c8c8);
+            background: radial-gradient(circle at 30% 20%, #e8e0e0, #c8c0c0);
         }
-        /* ----- ГЛАВНАЯ ПАНЕЛЬ (Стекло) ----- */
+
+        /* ----- ОСНОВНАЯ ПАНЕЛЬ (НА ВЕСЬ ЭКРАН) ----- */
         .glass-panel {
-            width: 100%;
-            max-width: 1400px;
+            position: fixed;
+            inset: 0;
+            width: 100vw;
             height: 100vh;
-            max-height: 98vh;
-            background: rgba(20, 20, 30, 0.25);
-            backdrop-filter: blur(28px) saturate(200%);
-            -webkit-backdrop-filter: blur(28px) saturate(200%);
-            border-radius: 48px;
-            border: 1px solid rgba(255, 70, 70, 0.25);
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 0 60px rgba(255, 50, 50, 0.05);
+            background: rgba(20, 20, 30, 0.22);
+            backdrop-filter: blur(32px) saturate(220%);
+            -webkit-backdrop-filter: blur(32px) saturate(220%);
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: background 0.5s ease, border-color 0.5s ease;
-            position: relative;
+            transition: background 0.5s ease;
         }
         body.light .glass-panel {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(0, 0, 0, 0.15);
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.20);
         }
-        /* Анимированный фон внутри панели */
+
+        /* ----- АНИМИРОВАННЫЙ ФОН (GLOW) ----- */
         .glass-panel::before {
             content: '';
             position: absolute;
             inset: -50%;
-            background: conic-gradient(from 0deg at 50% 50%, #ff3b3b22, #ff6b6b22, #ff3b3b22);
-            animation: rotateGlow 20s linear infinite;
+            background: conic-gradient(from 0deg at 50% 50%, #ff3b3b11, #ff6b6b22, #ff3b3b11, #ff6b6b22);
+            animation: rotateGlow 25s linear infinite;
             z-index: 0;
             pointer-events: none;
         }
@@ -73,18 +78,18 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 28px;
-            border-bottom: 1px solid rgba(255, 70, 70, 0.08);
-            background: rgba(0, 0, 0, 0.2);
+            padding: 18px 28px;
+            border-bottom: 1px solid rgba(255, 70, 70, 0.06);
+            background: rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(8px);
             flex-shrink: 0;
         }
         body.light .top-bar {
-            border-bottom-color: rgba(0, 0, 0, 0.05);
-            background: rgba(255, 255, 255, 0.1);
+            border-bottom-color: rgba(0, 0, 0, 0.04);
+            background: rgba(255, 255, 255, 0.10);
         }
         .top-bar .brand {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 800;
             background: linear-gradient(135deg, #ff3b3b, #ff6b6b);
             -webkit-background-clip: text;
@@ -123,15 +128,11 @@
         }
         @keyframes pulseDot {
             0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.3;
-            }
+            100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
-        /* ----- ОСНОВНОЙ КОНТЕНТ ----- */
+        /* ----- ОСНОВНОЙ КОНТЕНТ (FULL) ----- */
         .main-content {
             flex: 1;
             position: relative;
@@ -151,36 +152,23 @@
             display: flex;
         }
         @keyframes fadeSlide {
-            0% {
-                opacity: 0;
-                transform: translateY(25px) scale(0.97);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            0% { opacity: 0; transform: translateY(25px) scale(0.97); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .page::-webkit-scrollbar {
-            width: 4px;
-        }
-        .page::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .page::-webkit-scrollbar-thumb {
-            background: rgba(255, 70, 70, 0.3);
-            border-radius: 10px;
-        }
+        .page::-webkit-scrollbar { width: 4px; }
+        .page::-webkit-scrollbar-track { background: transparent; }
+        .page::-webkit-scrollbar-thumb { background: rgba(255, 70, 70, 0.3); border-radius: 10px; }
 
-        /* ----- ОБЛОЖКА (с улучшенной маской) ----- */
+        /* ----- ОБЛОЖКА (С УЛУЧШЕННОЙ МАСКОЙ) ----- */
         .cover-area {
             position: relative;
             border-radius: 32px;
             overflow: hidden;
-            height: 200px;
-            min-height: 150px;
+            height: 220px;
+            min-height: 160px;
             background: radial-gradient(circle at 30% 30%, #3d1a1a, #0a0202);
-            border: 1px solid rgba(255, 70, 70, 0.15);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 70, 70, 0.12);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
             flex-shrink: 0;
         }
         body.light .cover-area {
@@ -192,20 +180,15 @@
             object-fit: contain;
             display: block;
             background: transparent;
-            mask-image: radial-gradient(circle at 50% 50%, black 45%, transparent 92%);
-            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 45%, transparent 92%);
+            mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 92%);
+            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 92%);
             mix-blend-mode: multiply;
             animation: float 8s ease-in-out infinite;
-            filter: drop-shadow(0 0 40px rgba(255, 0, 0, 0.25));
+            filter: drop-shadow(0 0 40px rgba(255, 0, 0, 0.2));
         }
         @keyframes float {
-            0%,
-            100% {
-                transform: translateY(0) scale(1);
-            }
-            50% {
-                transform: translateY(-15px) scale(1.03);
-            }
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-18px) scale(1.04); }
         }
         .cover-nft-badge {
             position: absolute;
@@ -213,7 +196,7 @@
             left: 24px;
             background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(12px);
-            padding: 8px 20px;
+            padding: 8px 22px;
             border-radius: 60px;
             font-size: 14px;
             color: #fff;
@@ -222,11 +205,9 @@
             align-items: center;
             gap: 10px;
             z-index: 2;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
         }
-        .cover-nft-badge i {
-            color: #ff6b6b;
-        }
+        .cover-nft-badge i { color: #ff6b6b; }
         .cover-overlay {
             position: absolute;
             bottom: 18px;
@@ -252,17 +233,15 @@
             border-color: rgba(255, 50, 50, 0.4);
             transform: scale(1.05);
         }
-        #coverUpload {
-            display: none;
-        }
+        #coverUpload { display: none; }
 
-        /* ----- ПРОФИЛЬ И СТАТИСТИКА (динамический баланс) ----- */
+        /* ----- ПРОФИЛЬ И СТАТИСТИКА ----- */
         .profile-stats {
             display: flex;
             align-items: center;
             gap: 20px;
             flex-wrap: wrap;
-            background: rgba(0, 0, 0, 0.25);
+            background: rgba(0, 0, 0, 0.20);
             backdrop-filter: blur(12px);
             border-radius: 40px;
             padding: 16px 28px;
@@ -271,7 +250,7 @@
             transition: all 0.4s ease;
         }
         body.light .profile-stats {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.20);
             border-color: rgba(0, 0, 0, 0.04);
         }
         .profile-avatar {
@@ -285,9 +264,15 @@
             font-size: 30px;
             font-weight: 700;
             color: #fff;
-            box-shadow: 0 0 60px rgba(255, 0, 0, 0.2);
+            box-shadow: 0 0 60px rgba(255, 0, 0, 0.15);
             border: 2px solid rgba(255, 255, 255, 0.06);
             flex-shrink: 0;
+            overflow: hidden;
+        }
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .profile-info {
             display: flex;
@@ -306,12 +291,8 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        body.light .profile-info .name {
-            color: #1a1a1a;
-        }
-        .profile-info .name:hover {
-            color: #ff6b6b;
-        }
+        body.light .profile-info .name { color: #1a1a1a; }
+        .profile-info .name:hover { color: #ff6b6b; }
         .profile-info .name-edit {
             background: transparent;
             border: none;
@@ -324,28 +305,20 @@
             width: 160px;
             padding: 0 4px;
         }
-        body.light .profile-info .name-edit {
-            color: #1a1a1a;
-        }
-        .profile-info .name-edit:focus {
-            border-bottom-color: #ff6b6b;
-        }
+        body.light .profile-info .name-edit { color: #1a1a1a; }
+        .profile-info .name-edit:focus { border-bottom-color: #ff6b6b; }
         .profile-info .handle {
             font-size: 14px;
             color: rgba(255, 255, 255, 0.35);
         }
-        body.light .profile-info .handle {
-            color: rgba(0, 0, 0, 0.35);
-        }
+        body.light .profile-info .handle { color: rgba(0, 0, 0, 0.35); }
         .stats-group {
             display: flex;
             gap: 32px;
             margin-left: auto;
             flex-wrap: wrap;
         }
-        .stat-item {
-            text-align: center;
-        }
+        .stat-item { text-align: center; }
         .stat-item .number {
             font-size: 24px;
             font-weight: 700;
@@ -353,39 +326,25 @@
             line-height: 1.2;
             transition: all 0.5s ease;
         }
-        .stat-item .number.empty {
-            color: rgba(255, 255, 255, 0.1);
-        }
-        body.light .stat-item .number.empty {
-            color: rgba(0, 0, 0, 0.1);
-        }
+        .stat-item .number.empty { color: rgba(255, 255, 255, 0.1); }
+        body.light .stat-item .number.empty { color: rgba(0, 0, 0, 0.1); }
         .stat-item .label {
             font-size: 10px;
             color: rgba(255, 255, 255, 0.3);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        body.light .stat-item .label {
-            color: rgba(0, 0, 0, 0.3);
-        }
-        /* Анимация изменения баланса */
+        body.light .stat-item .label { color: rgba(0, 0, 0, 0.3); }
         .balance-update {
             animation: balancePop 0.6s ease;
         }
         @keyframes balancePop {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.3);
-                color: #4caf50;
-            }
-            100% {
-                transform: scale(1);
-            }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); color: #4caf50; }
+            100% { transform: scale(1); }
         }
 
-        /* ----- ВИДЖЕТЫ (яркие карточки) ----- */
+        /* ----- ВИДЖЕТЫ ----- */
         .widgets-row {
             display: flex;
             gap: 14px;
@@ -409,46 +368,38 @@
             transform: translateY(-4px) scale(1.02);
             border-color: rgba(255, 70, 70, 0.2);
         }
-        .widget-item i {
-            font-size: 26px;
-            color: #ff6b6b;
-            opacity: 0.7;
-        }
+        .widget-item i { font-size: 26px; color: #ff6b6b; opacity: 0.7; }
         .widget-item .w-text {
             font-size: 14px;
             color: rgba(255, 255, 255, 0.6);
         }
-        body.light .widget-item .w-text {
-            color: rgba(0, 0, 0, 0.6);
-        }
+        body.light .widget-item .w-text { color: rgba(0, 0, 0, 0.6); }
         .widget-item .w-text strong {
             color: #fff;
             font-weight: 600;
         }
-        body.light .widget-item .w-text strong {
-            color: #1a1a1a;
-        }
+        body.light .widget-item .w-text strong { color: #1a1a1a; }
 
-        /* ----- КАРТОЧКИ (стекло) ----- */
+        /* ----- КАРТОЧКИ (СТЕКЛО) ----- */
         .glass-card {
-            background: rgba(20, 20, 30, 0.25);
+            background: rgba(20, 20, 30, 0.20);
             backdrop-filter: blur(16px);
             border-radius: 32px;
-            border: 1px solid rgba(255, 70, 70, 0.08);
+            border: 1px solid rgba(255, 70, 70, 0.06);
             padding: 24px;
             display: flex;
             flex-direction: column;
             transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
         }
         .glass-card:hover {
-            border-color: rgba(255, 70, 70, 0.2);
+            border-color: rgba(255, 70, 70, 0.15);
             transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
         }
         body.light .glass-card {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(0, 0, 0, 0.06);
+            background: rgba(255, 255, 255, 0.20);
+            border-color: rgba(0, 0, 0, 0.04);
         }
         .card-header {
             display: flex;
@@ -462,32 +413,20 @@
             color: #fff;
             letter-spacing: 0.3px;
         }
-        body.light .card-header h3 {
-            color: #1a1a1a;
-        }
-        .card-header h3 i {
-            margin-right: 10px;
-            color: #ff3b3b;
-        }
+        body.light .card-header h3 { color: #1a1a1a; }
+        .card-header h3 i { margin-right: 10px; color: #ff3b3b; }
 
-        /* ----- НАСТАВНИКИ (пусто) ----- */
+        /* ----- НАСТАВНИКИ (ПУСТО) ----- */
         .empty-mentors {
             color: rgba(255, 255, 255, 0.2);
             font-size: 16px;
             text-align: center;
             padding: 40px 0;
         }
-        .empty-mentors i {
-            font-size: 36px;
-            display: block;
-            margin-bottom: 12px;
-            opacity: 0.2;
-        }
-        body.light .empty-mentors {
-            color: rgba(0, 0, 0, 0.2);
-        }
+        .empty-mentors i { font-size: 36px; display: block; margin-bottom: 12px; opacity: 0.2; }
+        body.light .empty-mentors { color: rgba(0, 0, 0, 0.2); }
 
-        /* ----- НАСТРОЙКИ (тогглы с анимацией) ----- */
+        /* ----- НАСТРОЙКИ ----- */
         .settings-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -498,22 +437,20 @@
             align-items: center;
             justify-content: space-between;
             padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.12);
             border-radius: 18px;
             border: 1px solid rgba(255, 255, 255, 0.02);
             transition: 0.3s;
         }
         body.light .setting-toggle {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
             border-color: rgba(0, 0, 0, 0.02);
         }
         .setting-toggle span {
             color: rgba(255, 255, 255, 0.6);
             font-size: 14px;
         }
-        body.light .setting-toggle span {
-            color: rgba(0, 0, 0, 0.6);
-        }
+        body.light .setting-toggle span { color: rgba(0, 0, 0, 0.6); }
         .toggle-switch {
             width: 44px;
             height: 24px;
@@ -524,13 +461,8 @@
             transition: 0.3s;
             border: 1px solid rgba(255, 255, 255, 0.03);
         }
-        body.light .toggle-switch {
-            background: rgba(0, 0, 0, 0.08);
-        }
-        .toggle-switch.active {
-            background: #ff3b3b;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
-        }
+        body.light .toggle-switch { background: rgba(0, 0, 0, 0.08); }
+        .toggle-switch.active { background: #ff3b3b; box-shadow: 0 0 20px rgba(255, 0, 0, 0.2); }
         .toggle-switch::after {
             content: '';
             position: absolute;
@@ -542,9 +474,7 @@
             border-radius: 50%;
             transition: 0.3s;
         }
-        .toggle-switch.active::after {
-            left: 22px;
-        }
+        .toggle-switch.active::after { left: 22px; }
 
         /* ----- ФОРМА ВЫПЛАТ ----- */
         .payout-form {
@@ -564,12 +494,10 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        body.light .payout-form label {
-            color: rgba(0, 0, 0, 0.35);
-        }
+        body.light .payout-form label { color: rgba(0, 0, 0, 0.35); }
         .payout-form input,
         .payout-form select {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.20);
             border: 1px solid rgba(255, 70, 70, 0.08);
             border-radius: 16px;
             padding: 12px 18px;
@@ -581,7 +509,7 @@
         }
         body.light .payout-form input,
         body.light .payout-form select {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.20);
             border-color: rgba(0, 0, 0, 0.08);
             color: #1a1a1a;
         }
@@ -593,15 +521,9 @@
         .payout-form input::placeholder {
             color: rgba(255, 255, 255, 0.15);
         }
-        body.light .payout-form input::placeholder {
-            color: rgba(0, 0, 0, 0.15);
-        }
-        .payout-form select option {
-            background: #1a1a1a;
-        }
-        body.light .payout-form select option {
-            background: #f5f5f5;
-        }
+        body.light .payout-form input::placeholder { color: rgba(0, 0, 0, 0.15); }
+        .payout-form select option { background: #1a1a1a; }
+        body.light .payout-form select option { background: #f5f5f5; }
 
         .btn-payout {
             background: linear-gradient(135deg, #ff3b3b, #b71c1c);
@@ -616,55 +538,105 @@
             box-shadow: 0 8px 40px rgba(255, 0, 0, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.03);
             letter-spacing: 0.5px;
-            margin-top: 4px;
         }
         .btn-payout:hover {
             transform: scale(1.02) translateY(-2px);
             box-shadow: 0 12px 48px rgba(255, 0, 0, 0.25);
             background: linear-gradient(135deg, #ff4d4d, #c62828);
         }
-        .btn-payout:active {
-            transform: scale(0.97);
+        .btn-payout:active { transform: scale(0.97); }
+
+        /* ----- АДМИНКА (встроенная) ----- */
+        .admin-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex: 1;
         }
+        .admin-request {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 20px;
+            padding: 14px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: 0.3s;
+        }
+        .admin-request:hover { background: rgba(255, 70, 70, 0.04); }
+        .admin-request .info {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+        .admin-request .info strong { color: #fff; }
+        body.light .admin-request .info { color: rgba(0, 0, 0, 0.7); }
+        body.light .admin-request .info strong { color: #1a1a1a; }
+        .admin-request .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .admin-request .actions button {
+            border: none;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .admin-request .actions .accept {
+            background: #4caf50;
+            color: #fff;
+        }
+        .admin-request .actions .accept:hover { background: #66bb6a; transform: scale(1.05); }
+        .admin-request .actions .reject {
+            background: #f44336;
+            color: #fff;
+        }
+        .admin-request .actions .reject:hover { background: #ef5350; transform: scale(1.05); }
+        .admin-empty {
+            color: rgba(255, 255, 255, 0.2);
+            text-align: center;
+            padding: 30px 0;
+        }
+        body.light .admin-empty { color: rgba(0, 0, 0, 0.2); }
 
         /* ----- НИЖНЯЯ НАВИГАЦИЯ ----- */
         .bottom-nav {
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 8px 16px 16px 16px;
-            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 16px 18px 16px;
+            background: rgba(0, 0, 0, 0.25);
             backdrop-filter: blur(16px);
-            border-top: 1px solid rgba(255, 70, 70, 0.06);
+            border-top: 1px solid rgba(255, 70, 70, 0.04);
             flex-shrink: 0;
-            gap: 6px;
+            gap: 8px;
             flex-wrap: wrap;
         }
         body.light .bottom-nav {
-            background: rgba(255, 255, 255, 0.3);
-            border-top-color: rgba(0, 0, 0, 0.06);
+            background: rgba(255, 255, 255, 0.25);
+            border-top-color: rgba(0, 0, 0, 0.04);
         }
         .bottom-nav .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.25);
             font-size: 10px;
             font-weight: 500;
             transition: all 0.3s ease;
             cursor: pointer;
-            padding: 6px 16px;
+            padding: 6px 18px;
             border-radius: 40px;
             background: transparent;
             border: none;
             gap: 2px;
-            min-width: 60px;
+            min-width: 64px;
             position: relative;
         }
-        body.light .bottom-nav .nav-item {
-            color: rgba(0, 0, 0, 0.3);
-        }
+        body.light .bottom-nav .nav-item { color: rgba(0, 0, 0, 0.25); }
         .bottom-nav .nav-item i {
             font-size: 24px;
             transition: 0.3s;
@@ -676,20 +648,20 @@
         }
         .bottom-nav .nav-item.active {
             color: #ff3b3b;
-            background: rgba(255, 50, 50, 0.1);
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.05);
+            background: rgba(255, 50, 50, 0.08);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.03);
         }
         .bottom-nav .nav-item.active i {
-            text-shadow: 0 0 40px rgba(255, 0, 0, 0.2);
+            text-shadow: 0 0 40px rgba(255, 0, 0, 0.15);
         }
         .bottom-nav .nav-item:hover {
             color: #fff;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.03);
             transform: translateY(-3px);
         }
         body.light .bottom-nav .nav-item:hover {
             color: #1a1a1a;
-            background: rgba(0, 0, 0, 0.04);
+            background: rgba(0, 0, 0, 0.03);
         }
 
         /* ----- TOAST ----- */
@@ -723,132 +695,41 @@
             pointer-events: auto;
         }
         @keyframes slideUp {
-            0% {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
 
         /* ----- АДАПТИВ ----- */
         @media (max-width: 768px) {
-            .glass-panel {
-                max-height: 99vh;
-                border-radius: 32px;
-                height: auto;
-                min-height: 600px;
-            }
-            .top-bar {
-                padding: 12px 18px;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-            .top-bar .brand {
-                font-size: 20px;
-            }
-            .top-bar .brand small {
-                display: none;
-            }
-            .page {
-                padding: 16px 18px 12px 18px;
-                gap: 16px;
-            }
-            .cover-area {
-                height: 140px;
-                min-height: 100px;
-            }
-            .cover-nft-badge {
-                font-size: 11px;
-                padding: 6px 14px;
-                top: 12px;
-                left: 16px;
-            }
-            .profile-stats {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-                padding: 14px 18px;
-            }
-            .profile-avatar {
-                width: 52px;
-                height: 52px;
-                font-size: 24px;
-            }
-            .profile-info .name {
-                font-size: 17px;
-            }
-            .profile-info .name-edit {
-                font-size: 17px;
-                width: 130px;
-            }
-            .stats-group {
-                margin-left: 0;
-                justify-content: space-around;
-                gap: 16px;
-            }
-            .stat-item .number {
-                font-size: 20px;
-            }
-            .settings-grid {
-                grid-template-columns: 1fr;
-            }
-            .bottom-nav .nav-item {
-                min-width: 48px;
-                padding: 4px 10px;
-            }
-            .bottom-nav .nav-item i {
-                font-size: 20px;
-            }
-            .bottom-nav .nav-item span {
-                font-size: 8px;
-            }
+            .top-bar { padding: 14px 18px; flex-wrap: wrap; gap: 6px; }
+            .top-bar .brand { font-size: 22px; }
+            .top-bar .brand small { display: none; }
+            .page { padding: 16px 18px 12px 18px; gap: 16px; }
+            .cover-area { height: 160px; min-height: 120px; }
+            .cover-nft-badge { font-size: 12px; padding: 6px 16px; top: 12px; left: 16px; }
+            .profile-stats { flex-direction: column; align-items: stretch; gap: 10px; padding: 14px 18px; }
+            .profile-avatar { width: 52px; height: 52px; font-size: 24px; }
+            .profile-info .name { font-size: 17px; }
+            .profile-info .name-edit { font-size: 17px; width: 130px; }
+            .stats-group { margin-left: 0; justify-content: space-around; gap: 16px; }
+            .stat-item .number { font-size: 20px; }
+            .settings-grid { grid-template-columns: 1fr; }
+            .bottom-nav .nav-item { min-width: 50px; padding: 4px 12px; }
+            .bottom-nav .nav-item i { font-size: 20px; }
+            .bottom-nav .nav-item span { font-size: 8px; }
         }
         @media (max-width: 480px) {
-            .glass-panel {
-                border-radius: 24px;
-            }
-            .page {
-                padding: 12px 14px 10px 14px;
-                gap: 12px;
-            }
-            .cover-area {
-                height: 110px;
-                min-height: 80px;
-            }
-            .cover-nft-badge {
-                font-size: 9px;
-                padding: 4px 12px;
-                top: 8px;
-                left: 12px;
-            }
-            .profile-avatar {
-                width: 44px;
-                height: 44px;
-                font-size: 20px;
-            }
-            .profile-info .name {
-                font-size: 15px;
-            }
-            .profile-info .name-edit {
-                font-size: 15px;
-                width: 110px;
-            }
-            .stats-group .stat-item .number {
-                font-size: 18px;
-            }
-            .bottom-nav .nav-item {
-                min-width: 40px;
-                padding: 2px 6px;
-            }
-            .bottom-nav .nav-item i {
-                font-size: 18px;
-            }
-            .bottom-nav .nav-item span {
-                display: none;
-            }
+            .top-bar .brand { font-size: 18px; }
+            .page { padding: 12px 14px 10px 14px; gap: 12px; }
+            .cover-area { height: 130px; min-height: 90px; }
+            .cover-nft-badge { font-size: 10px; padding: 4px 12px; top: 10px; left: 12px; }
+            .profile-avatar { width: 44px; height: 44px; font-size: 20px; }
+            .profile-info .name { font-size: 15px; }
+            .profile-info .name-edit { font-size: 15px; width: 110px; }
+            .stat-item .number { font-size: 18px; }
+            .bottom-nav .nav-item { min-width: 42px; padding: 2px 8px; }
+            .bottom-nav .nav-item i { font-size: 18px; }
+            .bottom-nav .nav-item span { display: none; }
         }
     </style>
 </head>
@@ -861,7 +742,8 @@
         </div>
 
         <div class="main-content" id="mainContent">
-            <!-- ГЛАВНАЯ -->
+
+            <!-- ===== СТРАНИЦА: ГЛАВНАЯ ===== -->
             <div class="page active" id="page-home">
                 <div class="cover-area">
                     <img class="cover-image" id="coverImage" src="https://i.postimg.cc/mDmd6K96/IMG-2106.jpg" alt="NFT">
@@ -872,7 +754,7 @@
                     </div>
                 </div>
                 <div class="profile-stats">
-                    <div class="profile-avatar" id="avatarLetter">R</div>
+                    <div class="profile-avatar" id="avatarContainer"><span id="avatarLetter">R</span></div>
                     <div class="profile-info">
                         <div class="name-wrap">
                             <span class="name" id="displayName">Загрузка...</span>
@@ -882,18 +764,9 @@
                         <div class="handle" id="userHandle">@user</div>
                     </div>
                     <div class="stats-group">
-                        <div class="stat-item">
-                            <div class="number empty" id="referralCount">—</div>
-                            <div class="label">Приглашено</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="number" id="balanceDisplay">0.00</div>
-                            <div class="label">Баланс (ETH)</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="number">★ 4.9</div>
-                            <div class="label">Рейтинг</div>
-                        </div>
+                        <div class="stat-item"><div class="number empty" id="referralCount">—</div><div class="label">Приглашено</div></div>
+                        <div class="stat-item"><div class="number" id="balanceDisplay">0.00</div><div class="label">Баланс (ETH)</div></div>
+                        <div class="stat-item"><div class="number">★ 4.9</div><div class="label">Рейтинг</div></div>
                     </div>
                 </div>
                 <div class="widgets-row">
@@ -903,10 +776,10 @@
                 </div>
             </div>
 
-            <!-- ПРОФИЛЬ -->
+            <!-- ===== СТРАНИЦА: ПРОФИЛЬ ===== -->
             <div class="page" id="page-profile">
                 <div class="profile-stats" style="flex:1; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:30px;">
-                    <div class="profile-avatar" style="width:100px;height:100px;font-size:48px;" id="profileAvatarLetter">R</div>
+                    <div class="profile-avatar" style="width:100px;height:100px;font-size:48px;" id="profileAvatarContainer"><span id="profileAvatarLetter">R</span></div>
                     <div style="font-size:28px;font-weight:700;color:#fff;" id="profileDisplayName">Загрузка...</div>
                     <div style="color:rgba(255,255,255,0.3);" id="profileHandle">@user</div>
                     <div style="display:flex;gap:40px;margin-top:12px;">
@@ -917,15 +790,15 @@
                 </div>
             </div>
 
-            <!-- НАСТАВНИКИ -->
+            <!-- ===== СТРАНИЦА: НАСТАВНИКИ ===== -->
             <div class="page" id="page-mentors">
-                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:rgba(0,0,0,0.15); border-radius:32px; border:1px solid rgba(255,70,70,0.05);">
-                    <i class="fas fa-user-slash" style="font-size:48px; color:rgba(255,255,255,0.1);"></i>
-                    <span style="color:rgba(255,255,255,0.3); font-size:18px;">Пока что нету</span>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:rgba(0,0,0,0.10); border-radius:32px; border:1px solid rgba(255,70,70,0.04);">
+                    <i class="fas fa-user-slash" style="font-size:48px; color:rgba(255,255,255,0.08);"></i>
+                    <span style="color:rgba(255,255,255,0.2); font-size:18px;">Пока что нету</span>
                 </div>
             </div>
 
-            <!-- ВЫПЛАТЫ -->
+            <!-- ===== СТРАНИЦА: ВЫПЛАТЫ ===== -->
             <div class="page" id="page-payout">
                 <div class="glass-card">
                     <div class="card-header">
@@ -945,12 +818,12 @@
                             <label>Кошелёк TON (Tonkeeper)</label>
                             <input type="text" id="payoutWallet" placeholder="EQD... или UQD..." value="EQD1234567890abcdef">
                         </div>
-                        <button class="btn-payout btn-pulse" id="payoutBtn"><i class="fas fa-paper-plane" style="margin-right:10px;"></i> ОТПРАВИТЬ ЗАПРОС</button>
+                        <button class="btn-payout" id="payoutBtn"><i class="fas fa-paper-plane" style="margin-right:10px;"></i> ОТПРАВИТЬ ЗАПРОС</button>
                     </div>
                 </div>
             </div>
 
-            <!-- НАСТРОЙКИ -->
+            <!-- ===== СТРАНИЦА: НАСТРОЙКИ ===== -->
             <div class="page" id="page-settings">
                 <div class="glass-card">
                     <div class="card-header">
@@ -960,11 +833,11 @@
                     <div class="settings-grid">
                         <div class="setting-toggle">
                             <span><i class="fas fa-moon" style="margin-right:6px;"></i> Тёмная тема</span>
-                            <div class="toggle-switch active" id="themeToggle" data-toggle="theme"></div>
+                            <div class="toggle-switch active" id="themeToggle"></div>
                         </div>
                         <div class="setting-toggle">
                             <span><i class="fas fa-bell" style="margin-right:6px;"></i> Уведомления</span>
-                            <div class="toggle-switch active" id="notifToggle" data-toggle="notif"></div>
+                            <div class="toggle-switch active" id="notifToggle"></div>
                         </div>
                         <div class="setting-toggle">
                             <span><i class="fas fa-lock" style="margin-right:6px;"></i> Сменить пароль</span>
@@ -975,12 +848,26 @@
                             <span style="color:#ff6b6b; font-weight:500;">RU</span>
                         </div>
                     </div>
-                    <div id="passChangeArea" style="display:none; margin-top:16px; padding:16px; background:rgba(0,0,0,0.15); border-radius:24px;">
-                        <input type="password" id="newPassInput" placeholder="Новый пароль" style="background:rgba(0,0,0,0.2); border:1px solid #ff3b3b; padding:12px; border-radius:40px; color:#fff; width:100%; outline:none; font-family:'Inter', sans-serif;">
+                    <div id="passChangeArea" style="display:none; margin-top:16px; padding:16px; background:rgba(0,0,0,0.10); border-radius:24px;">
+                        <input type="password" id="newPassInput" placeholder="Новый пароль" style="background:rgba(0,0,0,0.15); border:1px solid #ff3b3b; padding:12px; border-radius:40px; color:#fff; width:100%; outline:none; font-family:'Inter', sans-serif;">
                         <button id="savePassBtn" style="margin-top:10px; background:linear-gradient(135deg,#ff3b3b,#b71c1c); border:none; color:#fff; padding:12px; border-radius:40px; width:100%; font-weight:600; cursor:pointer;">Сохранить пароль</button>
                     </div>
                 </div>
             </div>
+
+            <!-- ===== СТРАНИЦА: АДМИНКА (ТОЛЬКО ДЛЯ АДМИНА) ===== -->
+            <div class="page" id="page-admin">
+                <div class="glass-card" style="flex:1;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-shield"></i> Админ-панель</h3>
+                        <span style="color:rgba(255,255,255,0.15);"><i class="fas fa-lock"></i></span>
+                    </div>
+                    <div class="admin-panel" id="adminPanel">
+                        <div class="admin-empty">📭 Нет заявок на выплату</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <div class="bottom-nav" id="bottomNav">
@@ -989,6 +876,7 @@
             <button class="nav-item" data-page="mentors"><i class="fas fa-users"></i><span>Наставники</span></button>
             <button class="nav-item" data-page="payout"><i class="fas fa-dollar-sign"></i><span>Выплаты</span></button>
             <button class="nav-item" data-page="settings"><i class="fas fa-cog"></i><span>Настройки</span></button>
+            <button class="nav-item" id="adminNavBtn" data-page="admin" style="display:none;"><i class="fas fa-user-shield"></i><span>Админ</span></button>
         </div>
     </div>
 
@@ -1000,6 +888,9 @@
 
             // ----- ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ИЗ TELEGRAM -----
             let userData = {};
+            let isAdmin = false;
+            const ADMIN_ID = 8297446667;
+
             if (window.Telegram && Telegram.WebApp) {
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 if (user) {
@@ -1007,18 +898,44 @@
                         id: user.id,
                         firstName: user.first_name || 'User',
                         lastName: user.last_name || '',
-                        username: user.username || 'user'
+                        username: user.username || 'user',
+                        photoUrl: user.photo_url || null
                     };
+                    if (user.id == ADMIN_ID) {
+                        isAdmin = true;
+                        document.getElementById('adminNavBtn').style.display = 'flex';
+                    }
                 }
             }
 
-            // Отображаем имя и юзернейм
+            // ----- АВАТАРКА -----
+            const avatarContainer = document.getElementById('avatarContainer');
+            const profileAvatarContainer = document.getElementById('profileAvatarContainer');
+            const avatarLetter = document.getElementById('avatarLetter');
+            const profileAvatarLetter = document.getElementById('profileAvatarLetter');
+
+            if (userData.photoUrl) {
+                const img = document.createElement('img');
+                img.src = userData.photoUrl;
+                img.alt = 'avatar';
+                avatarContainer.innerHTML = '';
+                avatarContainer.appendChild(img);
+                const img2 = document.createElement('img');
+                img2.src = userData.photoUrl;
+                img2.alt = 'avatar';
+                profileAvatarContainer.innerHTML = '';
+                profileAvatarContainer.appendChild(img2);
+            } else {
+                const letter = (userData.firstName ? userData.firstName[0] : 'R').toUpperCase();
+                avatarLetter.textContent = letter;
+                profileAvatarLetter.textContent = letter;
+            }
+
+            // ----- ИМЯ И ЮЗЕРНЕЙМ -----
             const displayName = document.getElementById('displayName');
             const profileDisplayName = document.getElementById('profileDisplayName');
             const userHandle = document.getElementById('userHandle');
             const profileHandle = document.getElementById('profileHandle');
-            const avatarLetter = document.getElementById('avatarLetter');
-            const profileAvatarLetter = document.getElementById('profileAvatarLetter');
 
             const fullName = userData.firstName + (userData.lastName ? ' ' + userData.lastName : '');
             displayName.textContent = fullName || 'Ryzen User';
@@ -1026,11 +943,8 @@
             const handle = userData.username ? '@' + userData.username : '@user';
             userHandle.textContent = handle;
             profileHandle.textContent = handle;
-            const letter = (userData.firstName ? userData.firstName[0] : 'R').toUpperCase();
-            avatarLetter.textContent = letter;
-            profileAvatarLetter.textContent = letter;
 
-            // Баланс (храним в localStorage для синхронизации между вкладками)
+            // ----- БАЛАНС -----
             let currentBalance = parseFloat(localStorage.getItem('userBalance')) || 0;
             const balanceElement = document.getElementById('balanceDisplay');
             const profileBalanceElement = document.getElementById('profileBalance');
@@ -1040,7 +954,6 @@
                 balanceElement.textContent = newBalance.toFixed(2);
                 profileBalanceElement.textContent = newBalance.toFixed(2);
                 localStorage.setItem('userBalance', newBalance.toString());
-                // Анимация
                 balanceElement.classList.remove('balance-update');
                 void balanceElement.offsetWidth;
                 balanceElement.classList.add('balance-update');
@@ -1048,8 +961,6 @@
                 void profileBalanceElement.offsetWidth;
                 profileBalanceElement.classList.add('balance-update');
             }
-
-            // Инициализация баланса
             updateBalanceUI(currentBalance);
 
             // ----- ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ -----
@@ -1059,7 +970,8 @@
                 profile: document.getElementById('page-profile'),
                 mentors: document.getElementById('page-mentors'),
                 payout: document.getElementById('page-payout'),
-                settings: document.getElementById('page-settings')
+                settings: document.getElementById('page-settings'),
+                admin: document.getElementById('page-admin')
             };
 
             function switchPage(pageId) {
@@ -1075,21 +987,21 @@
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
                     const page = this.dataset.page;
-                    if (page) switchPage(page);
+                    if (page && pages[page]) switchPage(page);
                 });
             });
 
-            // ----- ЗАМЕНА ОБЛОЖКИ -----
+            // ----- ОБЛОЖКА -----
             const coverInput = document.getElementById('coverUpload');
             const changeCoverBtn = document.getElementById('changeCoverBtn');
             const coverImage = document.getElementById('coverImage');
             if (changeCoverBtn && coverInput) {
-                changeCoverBtn.addEventListener('click', function() { coverInput.click(); });
+                changeCoverBtn.addEventListener('click', () => coverInput.click());
                 coverInput.addEventListener('change', function(e) {
                     const file = e.target.files[0];
                     if (file) {
                         const reader = new FileReader();
-                        reader.onload = function(ev) {
+                        reader.onload = (ev) => {
                             coverImage.src = ev.target.result;
                             localStorage.setItem('coverImage', ev.target.result);
                         };
@@ -1125,9 +1037,7 @@
                     const val = this.value.trim();
                     saveName(val || 'Ryzen User');
                 });
-                nameInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') this.blur();
-                });
+                nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') this.blur(); });
             }
             const savedName = localStorage.getItem('userName');
             if (savedName) {
@@ -1138,48 +1048,35 @@
             // ----- ТОГГЛЫ -----
             const themeToggle = document.getElementById('themeToggle');
             const notifToggle = document.getElementById('notifToggle');
-
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'light') {
                 document.body.classList.add('light');
                 themeToggle.classList.remove('active');
-            } else {
-                document.body.classList.remove('light');
-                themeToggle.classList.add('active');
-            }
+            } else { themeToggle.classList.add('active'); }
             themeToggle.addEventListener('click', function() {
                 this.classList.toggle('active');
                 document.body.classList.toggle('light');
                 localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
             });
-
             const savedNotif = localStorage.getItem('notifications');
-            if (savedNotif === 'off') {
-                notifToggle.classList.remove('active');
-            } else {
-                notifToggle.classList.add('active');
-            }
+            if (savedNotif === 'off') { notifToggle.classList.remove('active'); } else { notifToggle.classList.add(
+                'active'); }
             notifToggle.addEventListener('click', function() {
                 this.classList.toggle('active');
                 localStorage.setItem('notifications', this.classList.contains('active') ? 'on' : 'off');
                 showToast(this.classList.contains('active') ? '🔔 Уведомления включены' : '🔕 Уведомления выключены');
             });
 
-            // Смена пароля
+            // ----- ПАРОЛЬ -----
             const changePassBtn = document.getElementById('changePassBtn');
             const passArea = document.getElementById('passChangeArea');
             const newPassInput = document.getElementById('newPassInput');
             const savePassBtn = document.getElementById('savePassBtn');
-
-            changePassBtn.addEventListener('click', function() {
-                passArea.style.display = passArea.style.display === 'none' ? 'block' : 'none';
-            });
+            changePassBtn.addEventListener('click', () => { passArea.style.display = passArea.style.display === 'none' ?
+                    'block' : 'none'; });
             savePassBtn.addEventListener('click', function() {
                 const pass = newPassInput.value.trim();
-                if (pass.length < 4) {
-                    showToast('⚠️ Пароль должен быть не менее 4 символов.', '#ff9800');
-                    return;
-                }
+                if (pass.length < 4) { showToast('⚠️ Минимум 4 символа.', '#ff9800'); return; }
                 localStorage.setItem('adminPassword', pass);
                 showToast('✅ Пароль сохранён!', '#4caf50');
                 passArea.style.display = 'none';
@@ -1219,30 +1116,129 @@
                         Telegram.WebApp.sendData(data);
                         showToast('✅ Заявка отправлена!', '#4caf50');
                         payoutWallet.value = '';
+                        // Если админка открыта — обновляем список заявок
+                        if (isAdmin && document.getElementById('page-admin').classList.contains('active')) {
+                            loadAdminRequests();
+                        }
                     } else {
                         alert('Заявка: ' + nft + ', ' + wallet);
                     }
                 });
             }
 
-            // ----- СИНХРОНИЗАЦИЯ БАЛАНСА (получение из localStorage от бота) -----
-            // Бот при принятии выплаты будет отправлять пользователю сообщение,
-            // а мы можем обновить баланс через WebApp, если бот пришлёт данные.
-            // Для демонстрации сделаем заглушку: при получении любого сообщения от бота (через WebApp) можно обновить баланс.
-            // Но т.к. бот не отправляет данные обратно в WebApp, мы оставляем ручное обновление через функцию.
-            // Пока оставим как есть.
+            // ----- АДМИНКА: ЗАГРУЗКА ЗАЯВОК (имитация) -----
+            // В реальном проекте заявки приходят от бота, здесь мы храним их в localStorage для демонстрации
+            let adminRequests = JSON.parse(localStorage.getItem('adminRequests') || '[]');
 
-            // Дополнительно: при загрузке страницы проверяем, не пришло ли обновление баланса из URL (для теста)
+            function loadAdminRequests() {
+                const panel = document.getElementById('adminPanel');
+                if (adminRequests.length === 0) {
+                    panel.innerHTML = '<div class="admin-empty">📭 Нет заявок на выплату</div>';
+                    return;
+                }
+                panel.innerHTML = '';
+                adminRequests.forEach((req, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'admin-request';
+                    div.innerHTML = `
+                        <div class="info">
+                            <strong>${req.nft}</strong> · ${req.wallet} <br>
+                            <span style="font-size:12px; opacity:0.5;">${req.date}</span>
+                        </div>
+                        <div class="actions">
+                            <button class="accept" data-index="${index}">✅ Принять</button>
+                            <button class="reject" data-index="${index}">❌ Отклонить</button>
+                        </div>
+                    `;
+                    panel.appendChild(div);
+                });
+
+                // Обработчики
+                panel.querySelectorAll('.accept').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.index);
+                        const req = adminRequests[idx];
+                        if (!req) return;
+                        // Имитация принятия
+                        const amount = prompt('Введите сумму выплаты (ETH):', '0.1');
+                        if (amount === null) return;
+                        const val = parseFloat(amount);
+                        if (isNaN(val) || val <= 0) {
+                            showToast('⚠️ Некорректная сумма.', '#ff9800');
+                            return;
+                        }
+                        // Увеличиваем баланс
+                        updateBalanceUI(currentBalance + val);
+                        // Удаляем заявку
+                        adminRequests.splice(idx, 1);
+                        localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
+                        loadAdminRequests();
+                        showToast(`✅ Выплата ${val} ETH принята!`, '#4caf50');
+                        // Отправка сообщения в группу (имитация)
+                        sendToGroup(req.nft, val, req.wallet);
+                    });
+                });
+                panel.querySelectorAll('.reject').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.index);
+                        adminRequests.splice(idx, 1);
+                        localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
+                        loadAdminRequests();
+                        showToast('❌ Заявка отклонена.', '#f44336');
+                    });
+                });
+            }
+
+            // ----- ИМИТАЦИЯ ОТПРАВКИ В ГРУППУ (ШАБЛОН) -----
+            function sendToGroup(nft, amount, wallet) {
+                const message =
+                    `📢 *НОВАЯ ВЫПЛАТА В ГРУППЕ!*\n━━━━━━━━━━━━━━━━━━━\n🖼 NFT: ${nft}\n💰 Сумма: ${amount} ETH\n💳 Кошелёк: ${wallet}\n✅ Статус: Выплачена\n━━━━━━━━━━━━━━━━━━━\n#выплата #ryzenteam`;
+                // В реальном проекте здесь был бы API-запрос к боту, который отправляет сообщение в группу.
+                // Сейчас просто показываем тост.
+                showToast('📨 Сообщение отправлено в группу!', '#4caf50');
+                console.log('Сообщение в группу:\n', message);
+            }
+
+            // Если пользователь админ — показываем админку и загружаем заявки
+            if (isAdmin) {
+                // Добавляем тестовые заявки для демонстрации, если их нет
+                if (adminRequests.length === 0) {
+                    adminRequests = [
+                        { nft: 'Vintage Cigar #24057', wallet: 'EQD1234567890abcdef', date: new Date().toLocaleString() },
+                        { nft: 'CyberPunk #1337', wallet: 'UQD9876543210', date: new Date().toLocaleString() }
+                    ];
+                    localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
+                }
+                // При загрузке страницы заполняем админку
+                setTimeout(() => {
+                    if (document.getElementById('page-admin').classList.contains('active')) {
+                        loadAdminRequests();
+                    }
+                }, 300);
+                // Также при переключении на админку
+                document.querySelector('[data-page="admin"]')?.addEventListener('click', function() {
+                    setTimeout(loadAdminRequests, 200);
+                });
+            }
+
+            // Если пришло обновление баланса из URL (тест)
             const urlParams = new URLSearchParams(window.location.search);
             const newBalance = parseFloat(urlParams.get('balance'));
             if (!isNaN(newBalance) && newBalance > 0) {
                 updateBalanceUI(currentBalance + newBalance);
                 showToast(`💰 Баланс пополнен на ${newBalance} ETH`, '#4caf50');
-                // Удаляем параметр из URL
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
-            console.log('Ryzen Team Panel загружена. Баланс:', currentBalance);
+            // ----- ПЕРЕХВАТ ЗАЯВОК ОТ БОТА (через WebApp) -----
+            // Если бот присылает данные через WebApp, обрабатываем
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.onEvent('mainButtonClicked', function() {
+                    // Можно добавить логику
+                });
+            }
+
+            console.log('Ryzen Team Panel загружена. Админ:', isAdmin);
         })();
     </script>
 </body>
