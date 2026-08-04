@@ -19,7 +19,7 @@ from aiohttp import web
 BOT_TOKEN = "8997816663:AAGyPl4aj69g3xeax5AZHmixw7nmhJ5SuLw"
 ADMIN_IDS = [8297446667]  # ваш админ
 GROUP_LINK = "https://t.me/+RIv8Upp6kptkYTVk"
-WEBAPP_URL = "https://ваш-username.github.io/ryzen-team"  # ЗАМЕНИТЕ
+WEBAPP_URL = "https://vluxx17-creator.github.io/Ryzenteam/"  # ЗАМЕНИТЕ
 
 # Порт для вебхука (Render задаёт через PORT)
 PORT = int(os.environ.get("PORT", 8443))
