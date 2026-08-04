@@ -20,11 +20,8 @@ BOT_TOKEN = "8997816663:AAGyPl4aj69g3xeax5AZHmixw7nmhJ5SuLw"
 ADMIN_IDS = [8297446667]  # твой Telegram ID
 GROUP_LINK = "https://t.me/+RIv8Upp6kptkYTVk"
 
-# ====== ТВОИ ССЫЛКИ (исправлены) ======
-WEBAPP_URL = "https://vluxx17-creator.github.io/Ryzenteam/"   # GitHub Pages
-WEBHOOK_HOST = "https://panelwork.onrender.com"               # Render
-
-# Порт — Render подставляет автоматически через переменную PORT
+WEBAPP_URL = "https://vluxx17-creator.github.io/Ryzenteam/"
+WEBHOOK_HOST = "https://panelwork.onrender.com"
 PORT = int(os.environ.get("PORT", 8443))
 WEBHOOK_PATH = "/webhook"
 
@@ -52,7 +49,8 @@ CREATE TABLE IF NOT EXISTS payouts (
     status TEXT DEFAULT 'pending',
     requested_at TEXT,
     accepted_at TEXT,
-    admin_id INTEGER
+    admin_id INTEGER,
+    admin_message_id INTEGER
 )
 ''')
 cursor.execute('''
@@ -123,10 +121,18 @@ def get_pending_payouts():
     cursor.execute('SELECT id, user_id, nft, wallet, requested_at FROM payouts WHERE status="pending" ORDER BY id')
     return cursor.fetchall()
 
-def update_payout(payout_id, amount, status, admin_id):
-    cursor.execute('UPDATE payouts SET amount=?, status=?, accepted_at=?, admin_id=? WHERE id=?',
-                   (amount, status, datetime.now().isoformat(), admin_id, payout_id))
+def update_payout(payout_id, amount, status, admin_id, admin_msg_id=None):
+    if admin_msg_id:
+        cursor.execute('UPDATE payouts SET amount=?, status=?, accepted_at=?, admin_id=?, admin_message_id=? WHERE id=?',
+                       (amount, status, datetime.now().isoformat(), admin_id, admin_msg_id, payout_id))
+    else:
+        cursor.execute('UPDATE payouts SET amount=?, status=?, accepted_at=?, admin_id=? WHERE id=?',
+                       (amount, status, datetime.now().isoformat(), admin_id, payout_id))
     conn.commit()
+
+def get_payout(payout_id):
+    cursor.execute('SELECT user_id, nft, wallet, admin_message_id FROM payouts WHERE id=?', (payout_id,))
+    return cursor.fetchone()
 
 def get_all_users():
     cursor.execute('SELECT user_id FROM users WHERE is_banned=0')
@@ -267,6 +273,7 @@ async def send_admin_welcome(message: Message):
         parse_mode="Markdown"
     )
 
+# ========== ОБРАБОТКА ЗАЯВОК ИЗ WEBAPP ==========
 @dp.message(F.web_app_data)
 async def handle_webapp_data(message: Message):
     if is_user_banned(message.from_user.id):
@@ -282,14 +289,165 @@ async def handle_webapp_data(message: Message):
             return
         user_id = message.from_user.id
         payout_id = add_payout(user_id, nft, wallet)
-        await message.answer(f"✅ Заявка на выплату создана! ID: {payout_id}\nNFT: {nft}\nКошелёк: {wallet}\n\nОжидайте решения администратора.")
+
+        # Ответ пользователю
+        await message.answer(f"✅ *Заявка на выплату создана!*\n"
+                             f"🆔 ID: {payout_id}\n"
+                             f"🖼 NFT: {nft}\n"
+                             f"💳 Кошелёк: {wallet}\n\n"
+                             f"⏳ Ожидайте решения администратора.",
+                             parse_mode="Markdown")
+
+        # Уведомление админам с кнопками
+        user = message.from_user
+        username = f"@{user.username}" if user.username else user.first_name
+        admin_text = (
+            f"📩 *Новая заявка на выплату* #ID{payout_id}\n"
+            f"━━━━━━━━━━━━━━━━━━━\n"
+            f"👤 *Пользователь:* {username}\n"
+            f"🆔 ID: `{user.id}`\n"
+            f"🖼 *NFT:* {nft}\n"
+            f"💳 *Кошелёк:* `{wallet}`\n"
+            f"📅 *Дата:* {datetime.now().strftime('%d.%m.%Y %H:%M')}\n"
+            f"━━━━━━━━━━━━━━━━━━━\n"
+            f"Выберите действие:"
+        )
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Принять", callback_data=f"accept_{payout_id}"),
+             InlineKeyboardButton(text="❌ Отклонить", callback_data=f"reject_{payout_id}")]
+        ])
         for admin_id in ADMIN_IDS:
-            await bot.send_message(admin_id, f"📩 Новая заявка #{payout_id}\n"
-                                             f"Пользователь: @{message.from_user.username or message.from_user.first_name}\n"
-                                             f"NFT: {nft}\nКошелёк: {wallet}")
+            sent = await bot.send_message(admin_id, admin_text, parse_mode="Markdown", reply_markup=keyboard)
+            # Сохраняем ID сообщения админа, чтобы потом обновить его
+            cursor.execute('UPDATE payouts SET admin_message_id=? WHERE id=?', (sent.message_id, payout_id))
+            conn.commit()
+
     except Exception as e:
+        logging.error(f"Ошибка обработки web_app_data: {e}")
         await message.answer("❌ Ошибка обработки данных.")
 
+# ========== ОБРАБОТЧИКИ CALLBACK ДЛЯ ЗАЯВОК ==========
+@dp.callback_query(lambda c: c.data and c.data.startswith('accept_'))
+async def accept_payout_callback(callback: CallbackQuery, state: FSMContext):
+    if callback.from_user.id not in ADMIN_IDS:
+        await callback.answer("⛔ Нет прав.", show_alert=True)
+        return
+    payout_id = int(callback.data.split('_')[1])
+    # Сохраняем ID заявки в состояние
+    await state.update_data(payout_id=payout_id)
+    await callback.message.answer("💰 Введите сумму выплаты (в ETH, например 0.1):")
+    await state.set_state("waiting_amount")
+    await callback.answer()
+
+@dp.message(StateFilter("waiting_amount"))
+async def process_amount(message: Message, state: FSMContext):
+    if message.from_user.id not in ADMIN_IDS:
+        await message.answer("⛔ Нет прав.")
+        return
+    try:
+        amount = float(message.text.strip().replace(',', '.'))
+        if amount <= 0:
+            raise ValueError
+    except:
+        await message.answer("❌ Введите положительное число (например, 0.05)")
+        return
+    data = await state.get_data()
+    payout_id = data.get('payout_id')
+    if not payout_id:
+        await message.answer("❌ Ошибка, попробуйте заново.")
+        await state.clear()
+        return
+
+    # Обновляем заявку
+    update_payout(payout_id, amount, 'accepted', message.from_user.id)
+
+    # Получаем данные заявки
+    cursor.execute('SELECT user_id, nft, wallet, admin_message_id FROM payouts WHERE id=?', (payout_id,))
+    row = cursor.fetchone()
+    if row:
+        user_id, nft, wallet, admin_msg_id = row
+        # Уведомление пользователю
+        try:
+            await bot.send_message(
+                user_id,
+                f"✅ *Ваша выплата одобрена!*\n\n"
+                f"💰 Сумма: {amount} ETH\n"
+                f"🖼 NFT: {nft}\n"
+                f"💳 Кошелёк: `{wallet}`\n"
+                f"📅 Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}\n\n"
+                f"Статус: *принята* администратором.",
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            logging.error(f"Не удалось уведомить пользователя {user_id}: {e}")
+
+        # Обновляем сообщение админа (убираем кнопки)
+        for admin_id in ADMIN_IDS:
+            try:
+                await bot.edit_message_text(
+                    f"✅ *Заявка #{payout_id} принята*\n"
+                    f"Сумма: {amount} ETH\n"
+                    f"Пользователь: @{message.from_user.username or message.from_user.first_name}",
+                    chat_id=admin_id,
+                    message_id=admin_msg_id,
+                    parse_mode="Markdown"
+                )
+            except:
+                pass
+
+        await message.answer(f"✅ Заявка #{payout_id} принята, сумма {amount} ETH. Пользователь уведомлён.")
+    else:
+        await message.answer("❌ Заявка не найдена.")
+    await state.clear()
+
+@dp.callback_query(lambda c: c.data and c.data.startswith('reject_'))
+async def reject_payout_callback(callback: CallbackQuery):
+    if callback.from_user.id not in ADMIN_IDS:
+        await callback.answer("⛔ Нет прав.", show_alert=True)
+        return
+    payout_id = int(callback.data.split('_')[1])
+
+    # Получаем данные заявки
+    cursor.execute('SELECT user_id, nft, wallet, admin_message_id FROM payouts WHERE id=?', (payout_id,))
+    row = cursor.fetchone()
+    if not row:
+        await callback.answer("Заявка не найдена.", show_alert=True)
+        return
+    user_id, nft, wallet, admin_msg_id = row
+
+    # Обновляем статус
+    update_payout(payout_id, 0, 'rejected', callback.from_user.id)
+
+    # Уведомляем пользователя
+    try:
+        await bot.send_message(
+            user_id,
+            f"❌ *Ваша выплата отклонена.*\n\n"
+            f"🖼 NFT: {nft}\n"
+            f"💳 Кошелёк: `{wallet}`\n"
+            f"Причина: администратор отклонил заявку.",
+            parse_mode="Markdown"
+        )
+    except:
+        pass
+
+    # Обновляем сообщение админа
+    for admin_id in ADMIN_IDS:
+        try:
+            await bot.edit_message_text(
+                f"❌ *Заявка #{payout_id} отклонена*\n"
+                f"Пользователь: @{callback.from_user.username or callback.from_user.first_name}",
+                chat_id=admin_id,
+                message_id=admin_msg_id,
+                parse_mode="Markdown"
+            )
+        except:
+            pass
+
+    await callback.message.edit_text(f"❌ Заявка #{payout_id} отклонена.")
+    await callback.answer()
+
+# ========== АДМИН-КОМАНДА /admin (список заявок) ==========
 @dp.message(Command("admin"))
 async def admin_panel(message: Message):
     if message.from_user.id not in ADMIN_IDS:
@@ -341,82 +499,7 @@ async def payout_detail(callback: CallbackQuery, state: FSMContext):
     )
     await callback.answer()
 
-@dp.callback_query(lambda c: c.data and c.data.startswith('accept_'))
-async def accept_payout(callback: CallbackQuery, state: FSMContext):
-    if callback.from_user.id not in ADMIN_IDS:
-        await callback.answer("⛔ Нет прав.", show_alert=True)
-        return
-    payout_id = int(callback.data.split('_')[1])
-    await state.update_data(payout_id=payout_id)
-    await callback.message.answer("💰 Введите сумму выплаты (в ETH, например 0.1):")
-    await state.set_state("waiting_amount")
-    await callback.answer()
-
-@dp.message(StateFilter("waiting_amount"))
-async def process_amount(message: Message, state: FSMContext):
-    if message.from_user.id not in ADMIN_IDS:
-        await message.answer("⛔ Нет прав.")
-        return
-    try:
-        amount = float(message.text.strip().replace(',', '.'))
-        if amount <= 0:
-            raise ValueError
-    except:
-        await message.answer("❌ Введите положительное число (например, 0.05)")
-        return
-    data = await state.get_data()
-    payout_id = data.get('payout_id')
-    if not payout_id:
-        await message.answer("❌ Ошибка, попробуйте заново.")
-        await state.clear()
-        return
-
-    update_payout(payout_id, amount, 'accepted', message.from_user.id)
-    cursor.execute('SELECT user_id, nft, wallet FROM payouts WHERE id=?', (payout_id,))
-    row = cursor.fetchone()
-    if row:
-        user_id, nft, wallet = row
-        try:
-            await bot.send_message(
-                user_id,
-                f"✅ *Ваша выплата одобрена!*\n\n"
-                f"Сумма: {amount} ETH\n"
-                f"NFT: {nft}\n"
-                f"Кошелёк: {wallet}\n"
-                f"Статус: принята администратором.",
-                parse_mode="Markdown"
-            )
-        except Exception as e:
-            logging.error(f"Не удалось уведомить пользователя {user_id}: {e}")
-        await message.answer(f"✅ Заявка #{payout_id} принята, сумма {amount} ETH. Пользователь уведомлён.")
-    else:
-        await message.answer("❌ Заявка не найдена.")
-    await state.clear()
-
-@dp.callback_query(lambda c: c.data and c.data.startswith('reject_'))
-async def reject_payout(callback: CallbackQuery):
-    if callback.from_user.id not in ADMIN_IDS:
-        await callback.answer("⛔ Нет прав.", show_alert=True)
-        return
-    payout_id = int(callback.data.split('_')[1])
-    update_payout(payout_id, 0, 'rejected', callback.from_user.id)
-    cursor.execute('SELECT user_id, nft FROM payouts WHERE id=?', (payout_id,))
-    row = cursor.fetchone()
-    if row:
-        user_id, nft = row
-        try:
-            await bot.send_message(
-                user_id,
-                f"❌ *Ваша выплата отклонена.*\n\n"
-                f"NFT: {nft}\n"
-                f"Причина: администратор отклонил заявку.",
-                parse_mode="Markdown"
-            )
-        except:
-            pass
-    await callback.message.edit_text(f"❌ Заявка #{payout_id} отклонена.")
-    await callback.answer()
-
+# ========== ОСТАЛЬНЫЕ КОМАНДЫ (ban, unban, broadcast, mute) ==========
 @dp.message(Command("ban"))
 async def ban_user(message: Message):
     if message.from_user.id not in ADMIN_IDS:
@@ -505,7 +588,7 @@ async def mute_user(message: Message):
     except Exception as e:
         await message.answer(f"❌ Ошибка: {e}")
 
-# ========== ЗАПУСК ЧЕРЕЗ ВЕБХУК (СЛУШАЕТ ПОРТ) ==========
+# ========== ЗАПУСК ЧЕРЕЗ ВЕБХУК ==========
 async def on_startup():
     webhook_url = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
     await bot.set_webhook(webhook_url)
@@ -513,28 +596,19 @@ async def on_startup():
 
 async def main():
     logging.basicConfig(level=logging.INFO)
-
-    # Создаём aiohttp-приложение
     app = web.Application()
-
-    # Настраиваем обработчик вебхуков
     webhook_requests_handler = SimpleRequestHandler(
         dispatcher=dp,
         bot=bot,
     )
     webhook_requests_handler.register(app, path=WEBHOOK_PATH)
-
-    # Запускаем веб-сервер на порту, который даёт Render
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
     await site.start()
-
-    # Устанавливаем вебхук при старте
     await on_startup()
-
     logging.info(f"✅ Бот запущен, слушает порт {PORT}")
-    await asyncio.Event().wait()  # бесконечное ожидание
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
     asyncio.run(main())
