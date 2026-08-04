@@ -3,6 +3,7 @@ import logging
 import sqlite3
 import random
 import json
+import os
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command, StateFilter
@@ -11,12 +12,21 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiohttp import web
 
 # --- Конфиг ---
 BOT_TOKEN = "8997816663:AAGyPl4aj69g3xeax5AZHmixw7nmhJ5SuLw"
 ADMIN_IDS = [8297446667]  # ваш админ
-GROUP_LINK = "https://t.me/+RIv8Upp6kptkYTVk"  # ссылка на группу
-WEBAPP_URL = "https://ваш-username.github.io/ryzen-team"  # ЗАМЕНИТЕ на ваш GitHub Pages URL
+GROUP_LINK = "https://t.me/+RIv8Upp6kptkYTVk"
+WEBAPP_URL = "https://ваш-username.github.io/ryzen-team"  # ЗАМЕНИТЕ
+
+# Порт для вебхука (Render задаёт через PORT)
+PORT = int(os.environ.get("PORT", 8443))
+WEBHOOK_PATH = "/webhook"
+# Для локального теста можно закомментировать WEBHOOK_HOST,
+# но на Render нужно указать публичный URL вашего сервиса
+WEBHOOK_HOST = os.environ.get("WEBHOOK_HOST", "https://ваш-сервис.onrender.com")
 
 # --- База данных SQLite ---
 conn = sqlite3.connect('bot_data.db', check_same_thread=False)
@@ -122,29 +132,24 @@ def get_all_users():
     cursor.execute('SELECT user_id FROM users WHERE is_banned=0')
     return [row[0] for row in cursor.fetchall()]
 
-# --- Команда /start ---
+# --- Обработчики команд (все те же, что были) ---
 @dp.message(Command("start"))
 async def cmd_start(message: Message, state: FSMContext):
     user = message.from_user
-    # Проверка, занесён ли пользователь в БД
     cursor.execute('SELECT user_id FROM users WHERE user_id=?', (user.id,))
     if not cursor.fetchone():
         save_user(user.id, user.username, user.first_name)
 
-    # Проверка бана
     if is_user_banned(user.id):
         await message.answer("⛔ Вы забанены. Обратитесь к администратору.")
         return
 
-    # Админ пропускает всё
     if user.id in ADMIN_IDS:
         await send_admin_welcome(message)
         return
 
-    # Проверяем, проходил ли капчу
     cursor.execute('SELECT answer FROM captcha_sessions WHERE user_id=?', (user.id,))
     if not cursor.fetchone():
-        # Запускаем капчу
         question, answer = generate_captcha()
         cursor.execute('INSERT OR REPLACE INTO captcha_sessions (user_id, answer, created_at) VALUES (?, ?, ?)',
                        (user.id, answer, datetime.now().isoformat()))
@@ -153,15 +158,12 @@ async def cmd_start(message: Message, state: FSMContext):
         await message.answer(f"🧠 *Пожалуйста, решите простой пример:*\n{question}\n\nВведите ответ цифрой.", parse_mode="Markdown")
         return
 
-    # Капча пройдена – проверяем анкету
     if not is_form_filled(user.id):
         await start_form(message, state)
         return
 
-    # Всё пройдено – приветствие
     await send_welcome(message)
 
-# --- Капча ---
 @dp.message(CaptchaState.waiting_answer)
 async def captcha_answer(message: Message, state: FSMContext):
     user = message.from_user
@@ -183,7 +185,6 @@ async def captcha_answer(message: Message, state: FSMContext):
         cursor.execute('DELETE FROM captcha_sessions WHERE user_id=?', (user.id,))
         conn.commit()
         await state.clear()
-        # Теперь проверяем анкету
         if not is_form_filled(user.id):
             await start_form(message, state)
         else:
@@ -195,7 +196,6 @@ async def captcha_answer(message: Message, state: FSMContext):
         conn.commit()
         await message.answer(f"❌ Неверно! Попробуйте ещё раз:\n{question}")
 
-# --- Анкета (3 вопроса) ---
 async def start_form(message: Message, state: FSMContext):
     await state.set_state(FormState.waiting_work_hours)
     await message.answer("📝 *Заполните анкету для вступления в команду*\n\n"
@@ -226,11 +226,9 @@ async def form_success(message: Message, state: FSMContext):
     work_hours = data.get('work_hours')
     goals = data.get('goals')
     full_answer = f"Часы: {work_hours}\nЦели: {goals}\nУспех: {answer}"
-    # Сохраняем в БД
     update_user_form(message.from_user.id, full_answer)
     await state.clear()
 
-    # Поздравляем и даём ссылку на группу + кнопку приложения
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🚀 Перейти в приложение", web_app=WebAppInfo(url=WEBAPP_URL))],
         [InlineKeyboardButton(text="👥 Вступить в группу", url=GROUP_LINK)]
@@ -244,7 +242,6 @@ async def form_success(message: Message, state: FSMContext):
         reply_markup=keyboard
     )
 
-# --- Приветствие для прошедших анкету ---
 async def send_welcome(message: Message):
     user = message.from_user
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -258,7 +255,6 @@ async def send_welcome(message: Message):
         reply_markup=keyboard
     )
 
-# --- Приветствие для админа ---
 async def send_admin_welcome(message: Message):
     await message.answer(
         "👑 *Добро пожаловать, Администратор!*\n\n"
@@ -270,7 +266,6 @@ async def send_admin_welcome(message: Message):
         parse_mode="Markdown"
     )
 
-# --- Обработка данных из WebApp ---
 @dp.message(F.web_app_data)
 async def handle_webapp_data(message: Message):
     if is_user_banned(message.from_user.id):
@@ -287,7 +282,6 @@ async def handle_webapp_data(message: Message):
         user_id = message.from_user.id
         payout_id = add_payout(user_id, nft, wallet)
         await message.answer(f"✅ Заявка на выплату создана! ID: {payout_id}\nNFT: {nft}\nКошелёк: {wallet}\n\nОжидайте решения администратора.")
-        # Уведомление админов
         for admin_id in ADMIN_IDS:
             await bot.send_message(admin_id, f"📩 Новая заявка #{payout_id}\n"
                                              f"Пользователь: @{message.from_user.username or message.from_user.first_name}\n"
@@ -295,9 +289,6 @@ async def handle_webapp_data(message: Message):
     except Exception as e:
         await message.answer("❌ Ошибка обработки данных.")
 
-# --- Административные команды ---
-
-# /admin – список заявок
 @dp.message(Command("admin"))
 async def admin_panel(message: Message):
     if message.from_user.id not in ADMIN_IDS:
@@ -317,7 +308,6 @@ async def admin_panel(message: Message):
     builder.adjust(1)
     await message.answer("📋 *Список заявок:*", parse_mode="Markdown", reply_markup=builder.as_markup())
 
-# Обработка нажатия на заявку
 @dp.callback_query(lambda c: c.data and c.data.startswith('payout_'))
 async def payout_detail(callback: CallbackQuery, state: FSMContext):
     if callback.from_user.id not in ADMIN_IDS:
@@ -350,7 +340,6 @@ async def payout_detail(callback: CallbackQuery, state: FSMContext):
     )
     await callback.answer()
 
-# Принять заявку
 @dp.callback_query(lambda c: c.data and c.data.startswith('accept_'))
 async def accept_payout(callback: CallbackQuery, state: FSMContext):
     if callback.from_user.id not in ADMIN_IDS:
@@ -403,7 +392,6 @@ async def process_amount(message: Message, state: FSMContext):
         await message.answer("❌ Заявка не найдена.")
     await state.clear()
 
-# Отклонить заявку
 @dp.callback_query(lambda c: c.data and c.data.startswith('reject_'))
 async def reject_payout(callback: CallbackQuery):
     if callback.from_user.id not in ADMIN_IDS:
@@ -428,7 +416,6 @@ async def reject_payout(callback: CallbackQuery):
     await callback.message.edit_text(f"❌ Заявка #{payout_id} отклонена.")
     await callback.answer()
 
-# /ban – забанить пользователя (ответом на сообщение)
 @dp.message(Command("ban"))
 async def ban_user(message: Message):
     if message.from_user.id not in ADMIN_IDS:
@@ -445,7 +432,6 @@ async def ban_user(message: Message):
     conn.commit()
     await message.answer(f"✅ Пользователь {user_id} забанен.")
 
-# /unban – разбанить (по ID или username)
 @dp.message(Command("unban"))
 async def unban_user(message: Message):
     if message.from_user.id not in ADMIN_IDS:
@@ -474,7 +460,6 @@ async def unban_user(message: Message):
     conn.commit()
     await message.answer(f"✅ Пользователь {user_id} разбанен.")
 
-# /broadcast – рассылка всем пользователям
 @dp.message(Command("broadcast"))
 async def broadcast_start(message: Message, state: FSMContext):
     if message.from_user.id not in ADMIN_IDS:
@@ -504,7 +489,6 @@ async def broadcast_send(message: Message, state: FSMContext):
     await message.answer(f"✅ Рассылка отправлена {sent} пользователям.")
     await state.clear()
 
-# --- Управление группой (примеры команд для модерации) ---
 @dp.message(Command("mute"))
 async def mute_user(message: Message):
     if message.from_user.id not in ADMIN_IDS:
@@ -520,10 +504,40 @@ async def mute_user(message: Message):
     except Exception as e:
         await message.answer(f"❌ Ошибка: {e}")
 
-# --- Запуск ---
+# --- Запуск через вебхук (с портом) ---
+async def on_startup():
+    # Устанавливаем вебхук
+    webhook_url = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+    await bot.set_webhook(webhook_url)
+    logging.info(f"Webhook set to {webhook_url}")
+
 async def main():
     logging.basicConfig(level=logging.INFO)
-    await dp.start_polling(bot)
+
+    # Создаём aiohttp приложение
+    app = web.Application()
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+        secret_token=None,  # можно добавить SECRET_TOKEN для безопасности
+    )
+    webhook_requests_handler.register(app, path=WEBHOOK_PATH)
+
+    # Настраиваем запуск (установка вебхука)
+    app.router.post(WEBHOOK_PATH, webhook_requests_handler.handle)
+
+    # Запускаем веб-сервер
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
+    await site.start()
+
+    # Устанавливаем вебхук при старте
+    await on_startup()
+
+    logging.info(f"Bot started, listening on port {PORT}")
+    # Бесконечное ожидание
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
     asyncio.run(main())
