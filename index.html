@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ryzen Team · Work Panel</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            background: radial-gradient(circle at 30% 20%, #1f0a0a, #050505 90%);
+        }
+        .glass-panel {
+            width: 1320px;
+            max-width: 100%;
+            height: 700px;
+            max-height: 95vh;
+            background: rgba(16, 16, 16, 0.55);
+            backdrop-filter: blur(22px);
+            border-radius: 48px;
+            border: 1px solid rgba(255, 70, 70, 0.2);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        /* ----- ВЕРХНЯЯ ПЛАНКА ----- */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 24px;
+            border-bottom: 1px solid rgba(255,70,70,0.08);
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(6px);
+            flex-shrink: 0;
+        }
+        .top-bar .brand {
+            font-size: 22px;
+            font-weight: 800;
+            color: #ff3b3b;
+            letter-spacing: 2px;
+        }
+        .top-bar .brand i { margin-right: 8px; }
+        .top-bar .brand small {
+            font-weight: 400;
+            font-size: 12px;
+            color: rgba(255,255,255,0.2);
+            margin-left: 6px;
+        }
+        .top-bar .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+        }
+        .top-bar .user-badge i { color: #4caf50; font-size: 11px; }
+
+        /* ----- ОСНОВНОЙ КОНТЕНТ ----- */
+        .main-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: rgba(0,0,0,0.1);
+        }
+        .page {
+            position: absolute;
+            inset: 0;
+            padding: 20px 24px 16px 24px;
+            overflow-y: auto;
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .page.active {
+            display: flex;
+            animation: fadeIn 0.35s ease;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .page::-webkit-scrollbar { width: 4px; }
+        .page::-webkit-scrollbar-track { background: transparent; }
+        .page::-webkit-scrollbar-thumb { background: rgba(255,70,70,0.2); border-radius: 10px; }
+
+        /* ----- ОБЛОЖКА С МАСКОЙ ----- */
+        .cover-area {
+            position: relative;
+            border-radius: 28px;
+            overflow: hidden;
+            height: 180px;
+            min-height: 140px;
+            background: radial-gradient(circle at 30% 30%, #2d0a0a, #0a0202);
+            border: 1px solid rgba(255,70,70,0.12);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+        }
+        .cover-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: transparent;
+            mask-image: radial-gradient(circle at 50% 50%, black 55%, transparent 92%);
+            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 55%, transparent 92%);
+            animation: float 6s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(255,0,0,0.2));
+        }
+        @keyframes float {
+            0% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-12px) scale(1.02); }
+            100% { transform: translateY(0px) scale(1); }
+        }
+        .cover-nft-badge {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 12px;
+            color: #fff;
+            border: 1px solid rgba(255,70,70,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 2;
+        }
+        .cover-nft-badge i { color: #ff6b6b; }
+        .cover-overlay {
+            position: absolute;
+            bottom: 16px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 2;
+        }
+        .cover-overlay button {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+        .cover-overlay button:hover {
+            background: rgba(255,50,50,0.2);
+            border-color: rgba(255,50,50,0.25);
+            transform: scale(1.03);
+        }
+        #coverUpload { display: none; }
+
+        /* ----- ПРОФИЛЬ И СТАТИСТИКА ----- */
+        .profile-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(8px);
+            border-radius: 30px;
+            padding: 12px 20px;
+            border: 1px solid rgba(255,70,70,0.04);
+            flex-shrink: 0;
+        }
+        .profile-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff3b3b, #8a1a1a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 0 40px rgba(255,0,0,0.15);
+            border: 2px solid rgba(255,255,255,0.04);
+            flex-shrink: 0;
+        }
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .profile-info .name-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .profile-info .name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .profile-info .name:hover { color: #ff6b6b; }
+        .profile-info .name-edit {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #ff3b3b;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            width: 140px;
+            padding: 0 4px;
+        }
+        .profile-info .handle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+        }
+        .stats-group {
+            display: flex;
+            gap: 24px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+        .stat-item { text-align: center; }
+        .stat-item .number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ff5e5e;
+            line-height: 1.2;
+        }
+        .stat-item .number.empty { color: rgba(255,255,255,0.1); }
+        .stat-item .label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.25);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .widgets-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .widget-item {
+            background: rgba(255,255,255,0.02);
+            border-radius: 18px;
+            padding: 8px 14px;
+            border: 1px solid rgba(255,70,70,0.04);
+            flex: 1;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .widget-item:hover { background: rgba(255,70,70,0.04); }
+        .widget-item i { font-size: 20px; color: #ff6b6b; opacity: 0.5; }
+        .widget-item .w-text { font-size: 12px; color: rgba(255,255,255,0.5); }
+        .widget-item .w-text strong { color: #fff; font-weight: 600; }
+
+        .empty-mentors {
+            color: rgba(255,255,255,0.25);
+            font-size: 14px;
+            text-align: center;
+            padding: 30px 0;
+        }
+        .empty-mentors i { font-size: 28px; display: block; margin-bottom: 8px; opacity: 0.2; }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .setting-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+        .setting-toggle span {
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+        }
+        .toggle-switch {
+            width: 38px;
+            height: 20px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 40px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .toggle-switch.active { background: #ff3b3b; }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-switch.active::after { left: 20px; }
+
+        .payout-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+        .payout-form .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .payout-form label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .payout-form input, .payout-form select {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,70,70,0.06);
+            border-radius: 14px;
+            padding: 10px 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: #fff;
+            outline: none;
+            transition: 0.2s;
+        }
+        .payout-form input:focus, .payout-form select:focus {
+            border-color: #ff3b3b;
+            box-shadow: 0 0 20px rgba(255,0,0,0.03);
+        }
+        .payout-form input::placeholder { color: rgba(255,255,255,0.15); }
+        .payout-form select option { background: #1a1a1a; }
+        .btn-payout {
+            background: linear-gradient(135deg, #ff3b3b, #b71c1c);
+            border: none;
+            padding: 14px 0;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 15px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 30px rgba(255,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.03);
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+        .btn-payout:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(255,0,0,0.2);
+            background: linear-gradient(135deg, #ff4d4d, #c62828);
+        }
+        .btn-payout:active { transform: scale(0.97); }
+
+        .btn-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.15); }
+            70% { box-shadow: 0 0 0 12px rgba(255,0,0,0); }
+            100% { box-shadow: 0 0 0 0 rgba(255,0,0,0); }
+        }
+
+        .glass-card {
+            background: rgba(20,20,20,0.25);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            border: 1px solid rgba(255,70,70,0.06);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .card-header h3 i { margin-right: 8px; color: #ff3b3b; }
+
+        /* ----- НИЖНЯЯ НАВИГАЦИЯ ----- */
+        .bottom-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 12px 12px 12px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255,70,70,0.06);
+            flex-shrink: 0;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .bottom-nav .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.3);
+            font-size: 9px;
+            font-weight: 500;
+            transition: 0.2s ease;
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 30px;
+            background: transparent;
+            border: none;
+            gap: 2px;
+            min-width: 52px;
+            position: relative;
+        }
+        .bottom-nav .nav-item i {
+            font-size: 20px;
+            transition: 0.2s;
+        }
+        .bottom-nav .nav-item span {
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .bottom-nav .nav-item.active {
+            color: #ff3b3b;
+            background: rgba(255,50,50,0.08);
+        }
+        .bottom-nav .nav-item.active i {
+            text-shadow: 0 0 30px rgba(255,0,0,0.2);
+        }
+        .bottom-nav .nav-item:hover { color: #fff; background: rgba(255,255,255,0.03); }
+
+        /* ----- TOAST (всплывающие сообщения) ----- */
+        .toast-container {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            background: rgba(16,16,16,0.92);
+            backdrop-filter: blur(20px);
+            padding: 12px 24px;
+            border-radius: 60px;
+            color: #fff;
+            font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.3px;
+            animation: slideUp 0.4s ease;
+            max-width: 90%;
+            text-align: center;
+            font-size: 13px;
+            pointer-events: auto;
+        }
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ----- АДАПТИВ ----- */
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            .glass-panel {
+                height: auto;
+                max-height: 98vh;
+                border-radius: 28px;
+                min-height: 600px;
+            }
+            .top-bar {
+                padding: 10px 16px;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .top-bar .brand {
+                font-size: 18px;
+            }
+            .top-bar .brand small {
+                font-size: 10px;
+            }
+            .top-bar .user-badge {
+                font-size: 11px;
+            }
+            .page {
+                padding: 14px 16px 12px 16px;
+                gap: 12px;
+            }
+            .cover-area {
+                height: 120px;
+                min-height: 90px;
+                border-radius: 20px;
+            }
+            .cover-nft-badge {
+                font-size: 10px;
+                padding: 4px 12px;
+                top: 10px;
+                left: 14px;
+            }
+            .cover-overlay button {
+                font-size: 11px;
+                padding: 5px 14px;
+            }
+            .profile-stats {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                padding: 12px 16px;
+                border-radius: 24px;
+            }
+            .profile-avatar {
+                width: 48px;
+                height: 48px;
+                font-size: 22px;
+            }
+            .profile-info .name {
+                font-size: 16px;
+            }
+            .profile-info .name-edit {
+                font-size: 16px;
+                width: 120px;
+            }
+            .stats-group {
+                margin-left: 0;
+                justify-content: space-around;
+                gap: 12px;
+            }
+            .stat-item .number {
+                font-size: 18px;
+            }
+            .widgets-row {
+                flex-direction: column;
+            }
+            .widget-item {
+                min-width: unset;
+            }
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+            .bottom-nav {
+                padding: 4px 8px 10px 8px;
+                gap: 2px;
+            }
+            .bottom-nav .nav-item {
+                min-width: 44px;
+                padding: 4px 6px;
+            }
+            .bottom-nav .nav-item i {
+                font-size: 18px;
+            }
+            .bottom-nav .nav-item span {
+                font-size: 7px;
+            }
+            .toast {
+                font-size: 12px;
+                padding: 10px 18px;
+                bottom: 80px;
+            }
+        }
+        @media (max-width: 480px) {
+            .glass-panel {
+                border-radius: 20px;
+                max-height: 99vh;
+            }
+            .page {
+                padding: 10px 12px 8px 12px;
+                gap: 10px;
+            }
+            .cover-area {
+                height: 100px;
+                min-height: 70px;
+            }
+            .cover-nft-badge {
+                font-size: 8px;
+                padding: 3px 10px;
+                top: 8px;
+                left: 10px;
+            }
+            .cover-overlay button {
+                font-size: 10px;
+                padding: 4px 12px;
+            }
+            .profile-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            .profile-info .name {
+                font-size: 14px;
+            }
+            .profile-info .name-edit {
+                font-size: 14px;
+                width: 100px;
+            }
+            .profile-info .handle {
+                font-size: 10px;
+            }
+            .stat-item .number {
+                font-size: 16px;
+            }
+            .stat-item .label {
+                font-size: 8px;
+            }
+            .glass-card {
+                padding: 14px;
+            }
+            .card-header h3 {
+                font-size: 14px;
+            }
+            .bottom-nav .nav-item {
+                min-width: 38px;
+                padding: 2px 4px;
+            }
+            .bottom-nav .nav-item i {
+                font-size: 16px;
+            }
+            .bottom-nav .nav-item span {
+                font-size: 6px;
+            }
+            .toast {
+                font-size: 11px;
+                padding: 8px 14px;
+                bottom: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="glass-panel">
+
+    <!-- Верхняя планка -->
+    <div class="top-bar">
+        <div class="brand">
+            <i class="fas fa-bolt"></i> Ryzen <span style="color:#fff;">Team</span>
+            <small>· work panel</small>
+        </div>
+        <div class="user-badge">
+            <i class="fas fa-circle"></i>
+            <span>онлайн</span>
+        </div>
+    </div>
+
+    <!-- Контент -->
+    <div class="main-content" id="mainContent">
+
+        <!-- Страница ГЛАВНАЯ -->
+        <div class="page active" id="page-home">
+            <div class="cover-area">
+                <img class="cover-image" id="coverImage" src="https://i.postimg.cc/mDmd6K96/IMG-2106.jpg" alt="NFT">
+                <div class="cover-nft-badge"><i class="fas fa-gem"></i> Vintage Cigar #24057</div>
+                <div class="cover-overlay">
+                    <button id="changeCoverBtn"><i class="fas fa-pen"></i> Сменить</button>
+                    <input type="file" id="coverUpload" accept="image/*">
+                </div>
+            </div>
+            <div class="profile-stats">
+                <div class="profile-avatar">R</div>
+                <div class="profile-info">
+                    <div class="name-wrap">
+                        <span class="name" id="displayName">Blackbox_User</span>
+                        <i class="fas fa-pencil-alt" id="editNameIcon" style="color:rgba(255,255,255,0.15); cursor:pointer; font-size:13px;"></i>
+                        <input type="text" class="name-edit" id="nameInput" style="display:none;" maxlength="20">
+                    </div>
+                    <div class="handle">@blackbox_research</div>
+                </div>
+                <div class="stats-group">
+                    <div class="stat-item"><div class="number empty">—</div><div class="label">Приглашено</div></div>
+                    <div class="stat-item"><div class="number">₿ 0.82</div><div class="label">Баланс</div></div>
+                    <div class="stat-item"><div class="number">★ 4.9</div><div class="label">Рейтинг</div></div>
+                </div>
+            </div>
+            <div class="widgets-row">
+                <div class="widget-item"><i class="fas fa-birthday-cake"></i><div class="w-text"><strong>B-Day</strong><br><span style="font-size:11px; color:rgba(255,255,255,0.2);">14 мая</span></div></div>
+                <div class="widget-item"><i class="fas fa-hat-wizard"></i><div class="w-text"><strong>Durov Caps</strong><br><span style="font-size:11px; color:rgba(255,255,255,0.2);">3 шт.</span></div></div>
+                <div class="widget-item"><i class="fas fa-rocket"></i><div class="w-text"><strong>Boost</strong><br><span style="font-size:11px; color:rgba(255,255,255,0.2);">активен</span></div></div>
+            </div>
+        </div>
+
+        <!-- Страница ПРОФИЛЬ -->
+        <div class="page" id="page-profile">
+            <div class="profile-stats" style="flex:1; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:30px;">
+                <div class="profile-avatar" style="width:100px;height:100px;font-size:48px;">R</div>
+                <div style="font-size:28px;font-weight:700;color:#fff;" id="profileDisplayName">Blackbox_User</div>
+                <div style="color:rgba(255,255,255,0.3);">@blackbox_research</div>
+                <div style="display:flex;gap:40px;margin-top:12px;">
+                    <div><span style="color:rgba(255,255,255,0.3);">Приглашено</span><br><span style="font-size:24px;color:#ff5e5e;">—</span></div>
+                    <div><span style="color:rgba(255,255,255,0.3);">Баланс</span><br><span style="font-size:24px;color:#ff5e5e;">₿ 0.82</span></div>
+                    <div><span style="color:rgba(255,255,255,0.3);">Рейтинг</span><br><span style="font-size:24px;color:#ff5e5e;">★ 4.9</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница НАСТАВНИКИ -->
+        <div class="page" id="page-mentors">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:rgba(0,0,0,0.15); border-radius:28px; border:1px solid rgba(255,70,70,0.05);">
+                <i class="fas fa-user-slash" style="font-size:48px; color:rgba(255,255,255,0.1);"></i>
+                <span style="color:rgba(255,255,255,0.3); font-size:18px;">Пока что нету</span>
+            </div>
+        </div>
+
+        <!-- Страница ВЫПЛАТЫ (без поля суммы) -->
+        <div class="page" id="page-payout">
+            <div class="glass-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-hand-holding-usd"></i> Запрос на выплату</h3>
+                    <span style="color:rgba(255,255,255,0.15);"><i class="fas fa-wallet"></i></span>
+                </div>
+                <div class="payout-form">
+                    <div class="form-row">
+                        <label>Сделка (NFT-подарок)</label>
+                        <select id="payoutNft">
+                            <option value="Vintage Cigar #24057">Vintage Cigar #24057</option>
+                            <option value="CyberPunk #1337">CyberPunk #1337</option>
+                            <option value="Gemstone #009">Gemstone #009</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>Кошелёк TON (Tonkeeper)</label>
+                        <input type="text" id="payoutWallet" placeholder="EQD... или UQD..." value="EQD1234567890abcdef">
+                    </div>
+                    <button class="btn-payout btn-pulse" id="payoutBtn"><i class="fas fa-paper-plane" style="margin-right:10px;"></i> ОТПРАВИТЬ ЗАПРОС</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница НАСТРОЙКИ -->
+        <div class="page" id="page-settings">
+            <div class="glass-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-sliders-h"></i> Настройки</h3>
+                    <span style="color:rgba(255,255,255,0.15);"><i class="fas fa-cog"></i></span>
+                </div>
+                <div class="settings-grid">
+                    <div class="setting-toggle">
+                        <span><i class="fas fa-moon" style="margin-right:6px;"></i> Тёмная тема</span>
+                        <div class="toggle-switch active" data-toggle="theme"></div>
+                    </div>
+                    <div class="setting-toggle">
+                        <span><i class="fas fa-bell" style="margin-right:6px;"></i> Уведомления</span>
+                        <div class="toggle-switch" data-toggle="notif"></div>
+                    </div>
+                    <div class="setting-toggle">
+                        <span><i class="fas fa-globe" style="margin-right:6px;"></i> Язык</span>
+                        <span style="color:#ff6b6b; font-weight:500;">RU</span>
+                    </div>
+                    <div class="setting-toggle">
+                        <span><i class="fas fa-shield-alt" style="margin-right:6px;"></i> 2FA</span>
+                        <div class="toggle-switch active" data-toggle="2fa"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- end main-content -->
+
+    <!-- Нижняя навигация -->
+    <div class="bottom-nav" id="bottomNav">
+        <button class="nav-item active" data-page="home"><i class="fas fa-home"></i><span>Главная</span></button>
+        <button class="nav-item" data-page="profile"><i class="fas fa-user"></i><span>Профиль</span></button>
+        <button class="nav-item" data-page="mentors"><i class="fas fa-users"></i><span>Наставники</span></button>
+        <button class="nav-item" data-page="payout"><i class="fas fa-dollar-sign"></i><span>Выплаты</span></button>
+        <button class="nav-item" data-page="settings"><i class="fas fa-cog"></i><span>Настройки</span></button>
+    </div>
+
+</div> <!-- end glass-panel -->
+
+<!-- Контейнер для тост-сообщений -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    (function() {
+        'use strict';
+
+        // ----- ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ (НИЖНЯЯ НАВИГАЦИЯ) -----
+        const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+        const pages = {
+            home: document.getElementById('page-home'),
+            profile: document.getElementById('page-profile'),
+            mentors: document.getElementById('page-mentors'),
+            payout: document.getElementById('page-payout'),
+            settings: document.getElementById('page-settings')
+        };
+
+        function switchPage(pageId) {
+            Object.values(pages).forEach(p => p.classList.remove('active'));
+            if (pages[pageId]) pages[pageId].classList.add('active');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === pageId) item.classList.add('active');
+            });
+        }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.dataset.page;
+                if (page) switchPage(page);
+            });
+        });
+
+        // ----- ЗАМЕНА ОБЛОЖКИ -----
+        const coverInput = document.getElementById('coverUpload');
+        const changeCoverBtn = document.getElementById('changeCoverBtn');
+        const coverImage = document.getElementById('coverImage');
+        if (changeCoverBtn && coverInput) {
+            changeCoverBtn.addEventListener('click', function() { coverInput.click(); });
+            coverInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        coverImage.src = ev.target.result;
+                        localStorage.setItem('coverImage', ev.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        const savedCover = localStorage.getItem('coverImage');
+        if (savedCover && coverImage) coverImage.src = savedCover;
+
+        // ----- РЕДАКТИРОВАНИЕ ИМЕНИ -----
+        const displayName = document.getElementById('displayName');
+        const nameInput = document.getElementById('nameInput');
+        const editIcon = document.getElementById('editNameIcon');
+        const profileDisplayName = document.getElementById('profileDisplayName');
+
+        function saveName(name) {
+            displayName.textContent = name;
+            profileDisplayName.textContent = name;
+            displayName.style.display = 'inline';
+            nameInput.style.display = 'none';
+            localStorage.setItem('userName', name);
+        }
+        if (editIcon) {
+            editIcon.addEventListener('click', function() {
+                displayName.style.display = 'none';
+                nameInput.style.display = 'inline-block';
+                nameInput.value = displayName.textContent;
+                nameInput.focus();
+                nameInput.select();
+            });
+        }
+        if (nameInput) {
+            nameInput.addEventListener('blur', function() {
+                const val = this.value.trim();
+                saveName(val || 'Blackbox_User');
+            });
+            nameInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') this.blur();
+            });
+        }
+        const savedName = localStorage.getItem('userName');
+        if (savedName) {
+            displayName.textContent = savedName;
+            profileDisplayName.textContent = savedName;
+        }
+
+        // ----- ТОГГЛЫ (настройки) -----
+        document.querySelectorAll('.toggle-switch').forEach(t => {
+            t.addEventListener('click', function() { this.classList.toggle('active'); });
+        });
+
+        // ----- TOAST (всплывающие сообщения) -----
+        function showToast(message, color = '#4caf50') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.borderColor = color + '55';
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+
+        // ----- ОТПРАВКА ЗАЯВКИ В БОТА через Telegram WebApp -----
+        const payoutBtn = document.getElementById('payoutBtn');
+        const payoutNft = document.getElementById('payoutNft');
+        const payoutWallet = document.getElementById('payoutWallet');
+
+        if (payoutBtn) {
+            payoutBtn.addEventListener('click', function() {
+                const nft = payoutNft.value;
+                const wallet = payoutWallet.value.trim();
+
+                if (!wallet || wallet.length < 6) {
+                    showToast('⚠️ Введите корректный кошелёк TON.', '#ff9800');
+                    return;
+                }
+
+                // Отправка данных через Telegram WebApp
+                if (window.Telegram && Telegram.WebApp) {
+                    const data = JSON.stringify({ nft, wallet });
+                    Telegram.WebApp.sendData(data);
+                    showToast('✅ Заявка отправлена!', '#4caf50');
+                    // Очищаем поле (по желанию)
+                    payoutWallet.value = '';
+                } else {
+                    // Для теста вне Telegram
+                    alert('Заявка: ' + nft + ', ' + wallet);
+                }
+            });
+        }
+
+        console.log('Ryzen Team Panel загружена.');
+    })();
+</script>
+</body>
+</html>
