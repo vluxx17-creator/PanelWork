@@ -20,7 +20,7 @@ BOT_TOKEN = "8997816663:AAGyPl4aj69g3xeax5AZHmixw7nmhJ5SuLw"
 ADMIN_IDS = [8297446667]  # твой Telegram ID
 GROUP_LINK = "https://t.me/+RIv8Upp6kptkYTVk"
 
-WEBAPP_URL = "https://vluxx17-creator.github.io/Ryzenteam/"
+WEBAPP_URL = "https://vluxx17-creator.github.io/PanelWork/"
 WEBHOOK_HOST = "https://panelwork.onrender.com"
 PORT = int(os.environ.get("PORT", 8443))
 WEBHOOK_PATH = "/webhook"
