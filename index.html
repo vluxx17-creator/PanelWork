@@ -8,1111 +8,821 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        html,
-        body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: 'Inter', sans-serif;
-            background: #0a0a0a;
-        }
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at 30% 20%, #1a0a0a, #050505 95%);
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html, body { width:100%; height:100%; overflow:hidden; font-family:'Inter',sans-serif; background:#0a0a0a; }
+        body { display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 30% 20%, #1a0a0a, #050505 95%); }
 
-        /* ----- Preloader ----- */
-        #preloader {
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
-            background: #0a0a0a;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 1s ease, visibility 1s ease;
-            background: radial-gradient(circle at 30% 20%, #1f0a0a, #050505 95%);
-        }
-        #preloader.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        .preloader-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 30px;
-        }
-        .rocket {
-            font-size: 80px;
-            color: #ff3b3b;
-            animation: rocketFly 2.5s ease-in-out infinite;
-            filter: drop-shadow(0 0 40px rgba(255, 0, 0, 0.3));
-        }
-        @keyframes rocketFly {
-            0%,
-            100% {
-                transform: translateY(0) rotate(-45deg) scale(1);
-            }
-            50% {
-                transform: translateY(-30px) rotate(-45deg) scale(1.05);
-            }
-        }
-        .progress-container {
-            width: 320px;
-            max-width: 80vw;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: center;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 70, 70, 0.1);
-        }
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #ff3b3b, #ffa500, #ff6b6b);
-            background-size: 300% 100%;
-            border-radius: 10px;
-            transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            animation: progressShine 2s ease-in-out infinite;
-        }
-        @keyframes progressShine {
-            0% {
-                background-position: 0% 0%;
-            }
-            50% {
-                background-position: 100% 0%;
-            }
-            100% {
-                background-position: 0% 0%;
-            }
-        }
-        .progress-text {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 18px;
-            font-weight: 600;
-            letter-spacing: 4px;
-        }
-        .progress-text span {
-            color: #ffa500;
-        }
-        .preloader-sub {
-            color: rgba(255, 255, 255, 0.15);
-            font-size: 13px;
-            letter-spacing: 6px;
-            text-transform: uppercase;
-        }
+        /* Preloader */
+        #preloader { position:fixed; inset:0; z-index:99999; background:#0a0a0a; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 1s ease, visibility 1s ease; background:radial-gradient(circle at 30% 20%, #1f0a0a, #050505 95%); }
+        #preloader.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+        .preloader-content { display:flex; flex-direction:column; align-items:center; gap:30px; }
+        .rocket { font-size:80px; color:#ff3b3b; animation:rocketFly 2.5s ease-in-out infinite; filter:drop-shadow(0 0 40px rgba(255,0,0,0.3)); }
+        @keyframes rocketFly { 0%,100% { transform:translateY(0) rotate(-45deg) scale(1); } 50% { transform:translateY(-30px) rotate(-45deg) scale(1.05); } }
+        .progress-container { width:320px; max-width:80vw; display:flex; flex-direction:column; gap:12px; align-items:center; }
+        .progress-bar { width:100%; height:6px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden; border:1px solid rgba(255,70,70,0.1); }
+        .progress-fill { height:100%; width:0%; background:linear-gradient(90deg, #ff3b3b, #ffa500, #ff6b6b); background-size:300% 100%; border-radius:10px; transition:width 0.6s cubic-bezier(0.25,0.46,0.45,0.94); animation:progressShine 2s ease-in-out infinite; }
+        @keyframes progressShine { 0% { background-position:0% 0%; } 50% { background-position:100% 0%; } 100% { background-position:0% 0%; } }
+        .progress-text { color:rgba(255,255,255,0.6); font-size:18px; font-weight:600; letter-spacing:4px; }
+        .progress-text span { color:#ffa500; }
+        .preloader-sub { color:rgba(255,255,255,0.15); font-size:13px; letter-spacing:6px; text-transform:uppercase; }
 
-        /* ----- Основная панель ----- */
-        .glass-panel {
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(10, 10, 15, 0.85);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            opacity: 0;
-            transition: opacity 0.8s ease;
-        }
-        .glass-panel.visible {
-            opacity: 1;
-        }
+        /* Main panel */
+        .glass-panel { position:fixed; inset:0; width:100vw; height:100vh; background:rgba(10,10,15,0.85); backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%); display:flex; flex-direction:column; overflow:hidden; opacity:0; transition:opacity 0.8s ease; }
+        .glass-panel.visible { opacity:1; }
 
-        /* ----- Верхняя навигация (вкладки) ----- */
-        .top-nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 20px 10px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            flex-shrink: 0;
-            background: rgba(0, 0, 0, 0.2);
-        }
-        .top-nav .logo {
-            font-size: 20px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ffa500, #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 1px;
-        }
-        .top-nav .logo i {
-            -webkit-text-fill-color: initial;
-            color: #ffa500;
-            margin-right: 6px;
-        }
-        .top-nav .tabs {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-        }
-        .top-nav .tab-btn {
-            background: transparent;
-            border: none;
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 12px;
-            font-weight: 500;
-            padding: 6px 14px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-            letter-spacing: 0.3px;
-        }
-        .top-nav .tab-btn.active {
-            color: #fff;
-            background: rgba(255, 165, 0, 0.15);
-        }
-        .top-nav .tab-btn:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.04);
-        }
-        .top-nav .tab-btn i {
-            margin-right: 6px;
-            font-size: 13px;
-        }
+        /* Top navigation */
+        .top-nav { display:flex; align-items:center; justify-content:space-between; padding:14px 20px 10px 20px; border-bottom:1px solid rgba(255,255,255,0.04); flex-shrink:0; background:rgba(0,0,0,0.2); }
+        .top-nav .logo { font-size:20px; font-weight:800; background:linear-gradient(135deg, #ffa500, #ff6b6b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px; }
+        .top-nav .logo i { -webkit-text-fill-color:initial; color:#ffa500; margin-right:6px; }
+        .top-nav .tabs { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+        .top-nav .tab-btn { background:transparent; border:none; color:rgba(255,255,255,0.3); font-size:12px; font-weight:500; padding:6px 14px; border-radius:20px; cursor:pointer; transition:all 0.3s ease; font-family:'Inter',sans-serif; letter-spacing:0.3px; }
+        .top-nav .tab-btn.active { color:#fff; background:rgba(255,165,0,0.15); }
+        .top-nav .tab-btn:hover { color:#fff; background:rgba(255,255,255,0.04); }
+        .top-nav .tab-btn i { margin-right:6px; font-size:13px; }
 
-        /* ----- Основной контент ----- */
-        .main-content {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-        .page {
-            position: absolute;
-            inset: 0;
-            padding: 18px 20px 12px 20px;
-            overflow-y: auto;
-            display: none;
-            flex-direction: column;
-            gap: 16px;
-            animation: fadeSlide 0.4s ease;
-        }
-        .page.active {
-            display: flex;
-        }
-        @keyframes fadeSlide {
-            0% {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .page::-webkit-scrollbar {
-            width: 3px;
-        }
-        .page::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .page::-webkit-scrollbar-thumb {
-            background: rgba(255, 165, 0, 0.3);
-            border-radius: 10px;
-        }
+        /* Main content */
+        .main-content { flex:1; position:relative; overflow:hidden; }
+        .page { position:absolute; inset:0; padding:18px 20px 12px 20px; overflow-y:auto; display:none; flex-direction:column; gap:16px; animation:fadeSlide 0.4s ease; }
+        .page.active { display:flex; }
+        @keyframes fadeSlide { 0% { opacity:0; transform:translateY(20px); } 100% { opacity:1; transform:translateY(0); } }
+        .page::-webkit-scrollbar { width:3px; }
+        .page::-webkit-scrollbar-track { background:transparent; }
+        .page::-webkit-scrollbar-thumb { background:rgba(255,165,0,0.3); border-radius:10px; }
 
-        /* ----- Карточки NFT (витрина) ----- */
-        .nft-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-        }
-        .nft-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .nft-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255, 165, 0, 0.2);
-            background: rgba(255, 165, 0, 0.04);
-        }
-        .nft-card .nft-img {
-            width: 100%;
-            aspect-ratio: 1/1;
-            border-radius: 14px;
-            background: radial-gradient(circle at 30% 30%, #2d1a1a, #0a0202);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            color: #ffa500;
-            margin-bottom: 10px;
-            overflow: hidden;
-        }
-        .nft-card .nft-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 92%);
-            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 92%);
-        }
-        .nft-card .nft-title {
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .nft-card .nft-sub {
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 11px;
-            margin-top: 2px;
-        }
-        .nft-card .nft-price {
-            color: #ffa500;
-            font-weight: 700;
-            font-size: 15px;
-            margin-top: 6px;
-        }
+        /* Cards & stats */
+        .nft-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .nft-card { background:rgba(255,255,255,0.03); border-radius:20px; padding:16px; border:1px solid rgba(255,255,255,0.04); transition:all 0.3s ease; cursor:pointer; }
+        .nft-card:hover { transform:translateY(-4px); border-color:rgba(255,165,0,0.2); background:rgba(255,165,0,0.04); }
+        .nft-card .nft-img { width:100%; aspect-ratio:1/1; border-radius:14px; background:radial-gradient(circle at 30% 30%, #2d1a1a, #0a0202); display:flex; align-items:center; justify-content:center; font-size:40px; color:#ffa500; margin-bottom:10px; overflow:hidden; }
+        .nft-card .nft-img img { width:100%; height:100%; object-fit:cover; mask-image:radial-gradient(circle at 50% 50%, black 40%, transparent 92%); -webkit-mask-image:radial-gradient(circle at 50% 50%, black 40%, transparent 92%); }
+        .nft-card .nft-title { color:#fff; font-size:14px; font-weight:600; }
+        .nft-card .nft-sub { color:rgba(255,255,255,0.3); font-size:11px; margin-top:2px; }
+        .nft-card .nft-price { color:#ffa500; font-weight:700; font-size:15px; margin-top:6px; }
+        .nft-empty { color:rgba(255,255,255,0.15); text-align:center; padding:30px 0; font-size:14px; grid-column:1/-1; }
 
-        /* ----- Кнопка запроса выплаты ----- */
-        .payout-request-btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 60px;
-            background: linear-gradient(135deg, #ffa500, #ff6b3b);
-            color: #fff;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 30px rgba(255, 165, 0, 0.2);
-            font-family: 'Inter', sans-serif;
-            letter-spacing: 0.5px;
-        }
-        .payout-request-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 12px 40px rgba(255, 165, 0, 0.3);
-        }
-        .payout-request-btn:active {
-            transform: scale(0.97);
-        }
+        .stats-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; }
+        .stat-box { background:rgba(255,255,255,0.02); border-radius:16px; padding:12px 8px; text-align:center; border:1px solid rgba(255,255,255,0.03); }
+        .stat-box .stat-icon { font-size:20px; color:#ffa500; margin-bottom:4px; }
+        .stat-box .stat-value { color:#fff; font-size:18px; font-weight:700; }
+        .stat-box .stat-value.none { color:rgba(255,255,255,0.1); }
+        .stat-box .stat-label { color:rgba(255,255,255,0.25); font-size:9px; text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
 
-        /* ----- Статистика (ТОН, ПРОФИТ, МЕСТО, СТРИК) ----- */
-        .stats-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 10px;
-        }
-        .stat-box {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 16px;
-            padding: 12px 8px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-        }
-        .stat-box .stat-icon {
-            font-size: 20px;
-            color: #ffa500;
-            margin-bottom: 4px;
-        }
-        .stat-box .stat-value {
-            color: #fff;
-            font-size: 18px;
-            font-weight: 700;
-        }
-        .stat-box .stat-label {
-            color: rgba(255, 255, 255, 0.25);
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 2px;
-        }
+        .user-profile { display:flex; align-items:center; gap:14px; background:rgba(255,255,255,0.02); border-radius:30px; padding:12px 18px; border:1px solid rgba(255,255,255,0.03); }
+        .user-profile .avatar { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg, #ffa500, #ff6b3b); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:#fff; flex-shrink:0; overflow:hidden; }
+        .user-profile .avatar img { width:100%; height:100%; object-fit:cover; }
+        .user-profile .user-info { flex:1; }
+        .user-profile .user-info .name { color:#fff; font-size:16px; font-weight:600; }
+        .user-profile .user-info .handle { color:rgba(255,255,255,0.3); font-size:12px; }
+        .user-profile .user-balance { text-align:right; }
+        .user-profile .user-balance .amount { color:#ffa500; font-size:18px; font-weight:700; }
+        .user-profile .user-balance .label { color:rgba(255,255,255,0.2); font-size:10px; text-transform:uppercase; }
 
-        /* ----- Профиль пользователя ----- */
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 30px;
-            padding: 12px 18px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-        }
-        .user-profile .avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ffa500, #ff6b3b);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            font-weight: 700;
-            color: #fff;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-        .user-profile .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .user-profile .user-info {
-            flex: 1;
-        }
-        .user-profile .user-info .name {
-            color: #fff;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        .user-profile .user-info .handle {
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 12px;
-        }
-        .user-profile .user-balance {
-            text-align: right;
-        }
-        .user-profile .user-balance .amount {
-            color: #ffa500;
-            font-size: 18px;
-            font-weight: 700;
-        }
-        .user-profile .user-balance .label {
-            color: rgba(255, 255, 255, 0.2);
-            font-size: 10px;
-            text-transform: uppercase;
-        }
+        .payout-request-btn { width:100%; padding:16px; border:none; border-radius:60px; background:linear-gradient(135deg, #ffa500, #ff6b3b); color:#fff; font-size:16px; font-weight:700; cursor:pointer; transition:all 0.3s ease; box-shadow:0 8px 30px rgba(255,165,0,0.2); font-family:'Inter',sans-serif; letter-spacing:0.5px; }
+        .payout-request-btn:hover { transform:scale(1.02); box-shadow:0 12px 40px rgba(255,165,0,0.3); }
+        .payout-request-btn:active { transform:scale(0.97); }
 
-        /* ----- Форма выплаты (внутри страницы) ----- */
-        .payout-form {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-        .payout-form .form-group label {
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .payout-form .form-group input,
-        .payout-form .form-group select {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 16px;
-            padding: 12px 16px;
-            color: #fff;
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
-            outline: none;
-            transition: 0.3s;
-        }
-        .payout-form .form-group input:focus,
-        .payout-form .form-group select:focus {
-            border-color: #ffa500;
-            box-shadow: 0 0 20px rgba(255, 165, 0, 0.04);
-        }
-        .payout-form .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.12);
-        }
-        .payout-form .form-group select option {
-            background: #1a1a1a;
-        }
+        .payout-form { display:flex; flex-direction:column; gap:14px; }
+        .payout-form .form-group label { color:rgba(255,255,255,0.3); font-size:12px; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:4px; }
+        .payout-form .form-group input, .payout-form .form-group select { width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:12px 16px; color:#fff; font-family:'Inter',sans-serif; font-size:15px; outline:none; transition:0.3s; }
+        .payout-form .form-group input:focus, .payout-form .form-group select:focus { border-color:#ffa500; box-shadow:0 0 20px rgba(255,165,0,0.04); }
+        .payout-form .form-group input::placeholder { color:rgba(255,255,255,0.12); }
+        .payout-form .form-group select option { background:#1a1a1a; }
 
-        /* ----- Админ-панель ----- */
-        .admin-request {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 16px;
-            padding: 12px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            margin-bottom: 8px;
-        }
-        .admin-request .info {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 13px;
-        }
-        .admin-request .info strong {
-            color: #fff;
-        }
-        .admin-request .actions {
-            display: flex;
-            gap: 8px;
-        }
-        .admin-request .actions button {
-            border: none;
-            padding: 4px 14px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .admin-request .actions .accept {
-            background: #ffa500;
-            color: #fff;
-        }
-        .admin-request .actions .accept:hover {
-            background: #ffb84d;
-            transform: scale(1.05);
-        }
-        .admin-request .actions .reject {
-            background: rgba(255, 255, 255, 0.06);
-            color: rgba(255, 255, 255, 0.5);
-        }
-        .admin-request .actions .reject:hover {
-            background: rgba(255, 0, 0, 0.2);
-            color: #ff6b6b;
-        }
-        .admin-empty {
-            color: rgba(255, 255, 255, 0.15);
-            text-align: center;
-            padding: 30px 0;
-        }
+        /* Admin panel */
+        .admin-request { display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.02); border-radius:16px; padding:12px 16px; border:1px solid rgba(255,255,255,0.03); margin-bottom:8px; }
+        .admin-request .info { color:rgba(255,255,255,0.6); font-size:13px; }
+        .admin-request .info strong { color:#fff; }
+        .admin-request .actions { display:flex; gap:8px; }
+        .admin-request .actions button { border:none; padding:4px 14px; border-radius:40px; font-weight:600; font-size:12px; cursor:pointer; transition:0.2s; }
+        .admin-request .actions .accept { background:#ffa500; color:#fff; }
+        .admin-request .actions .accept:hover { background:#ffb84d; transform:scale(1.05); }
+        .admin-request .actions .reject { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); }
+        .admin-request .actions .reject:hover { background:rgba(255,0,0,0.2); color:#ff6b6b; }
+        .admin-empty { color:rgba(255,255,255,0.15); text-align:center; padding:30px 0; }
 
-        /* ----- Нижняя навигация ----- */
-        .bottom-nav {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 8px 16px 14px 16px;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(16px);
-            border-top: 1px solid rgba(255, 255, 255, 0.03);
-            flex-shrink: 0;
-        }
-        .bottom-nav .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            background: transparent;
-            border: none;
-            color: rgba(255, 255, 255, 0.2);
-            font-size: 9px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-family: 'Inter', sans-serif;
-        }
-        .bottom-nav .nav-item i {
-            font-size: 22px;
-            transition: 0.3s;
-        }
-        .bottom-nav .nav-item span {
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .bottom-nav .nav-item.active {
-            color: #ffa500;
-        }
-        .bottom-nav .nav-item.active i {
-            text-shadow: 0 0 30px rgba(255, 165, 0, 0.15);
-        }
-        .bottom-nav .nav-item:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.02);
-        }
+        /* More page - submenu */
+        .more-menu { display:flex; flex-direction:column; gap:4px; background:rgba(255,255,255,0.02); border-radius:20px; padding:6px; border:1px solid rgba(255,255,255,0.03); }
+        .more-menu .more-item { display:flex; align-items:center; gap:14px; padding:14px 18px; border-radius:16px; color:rgba(255,255,255,0.6); font-size:15px; font-weight:500; cursor:pointer; transition:all 0.2s; border:none; background:transparent; width:100%; text-align:left; font-family:'Inter',sans-serif; }
+        .more-menu .more-item:hover { background:rgba(255,165,0,0.06); color:#fff; }
+        .more-menu .more-item i { font-size:20px; color:#ffa500; width:28px; text-align:center; }
+        .more-menu .more-item .arrow { margin-left:auto; color:rgba(255,255,255,0.15); }
 
-        /* ----- Toast ----- */
-        .toast-container {
-            position: fixed;
-            bottom: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            pointer-events: none;
-        }
-        .toast {
-            background: rgba(16, 16, 20, 0.92);
-            backdrop-filter: blur(24px);
-            padding: 12px 28px;
-            border-radius: 60px;
-            color: #fff;
-            font-weight: 500;
-            border: 1px solid rgba(255, 165, 0, 0.15);
-            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8);
-            font-family: 'Inter', sans-serif;
-            animation: slideUp 0.5s ease;
-            max-width: 90%;
-            text-align: center;
-            font-size: 14px;
-            pointer-events: auto;
-        }
-        @keyframes slideUp {
-            0% {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        .more-content { display:none; flex-direction:column; gap:16px; margin-top:6px; }
+        .more-content.active { display:flex; }
 
-        /* ----- Адаптив ----- */
-        @media (max-width: 600px) {
-            .top-nav {
-                padding: 10px 14px 8px 14px;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-            .top-nav .logo {
-                font-size: 17px;
-            }
-            .top-nav .tab-btn {
-                font-size: 10px;
-                padding: 4px 10px;
-            }
-            .top-nav .tab-btn i {
-                margin-right: 3px;
-                font-size: 11px;
-            }
-            .page {
-                padding: 14px 14px 10px 14px;
-                gap: 14px;
-            }
-            .nft-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-            .nft-card {
-                padding: 12px;
-            }
-            .nft-card .nft-title {
-                font-size: 12px;
-            }
-            .stats-row {
-                grid-template-columns: 1fr 1fr 1fr 1fr;
-                gap: 6px;
-            }
-            .stat-box {
-                padding: 8px 4px;
-            }
-            .stat-box .stat-value {
-                font-size: 15px;
-            }
-            .stat-box .stat-label {
-                font-size: 8px;
-            }
-            .user-profile {
-                padding: 10px 14px;
-            }
-            .user-profile .avatar {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-            }
-            .user-profile .user-info .name {
-                font-size: 14px;
-            }
-            .user-profile .user-balance .amount {
-                font-size: 15px;
-            }
-            .bottom-nav .nav-item i {
-                font-size: 20px;
-            }
-            .bottom-nav .nav-item span {
-                font-size: 8px;
-            }
-            .bottom-nav .nav-item {
-                padding: 2px 8px;
-            }
+        /* Топ-табы */
+        .top-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+        .top-tabs .top-tab { background:transparent; border:1px solid rgba(255,255,255,0.05); color:rgba(255,255,255,0.3); padding:6px 14px; border-radius:30px; font-size:12px; font-weight:500; cursor:pointer; transition:all 0.2s; font-family:'Inter',sans-serif; }
+        .top-tabs .top-tab.active { background:rgba(255,165,0,0.1); border-color:#ffa500; color:#fff; }
+        .top-tabs .top-tab:hover { color:#fff; background:rgba(255,255,255,0.03); }
+
+        .top-list { display:flex; flex-direction:column; gap:8px; }
+        .top-item { display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(255,255,255,0.02); border-radius:14px; border:1px solid rgba(255,255,255,0.02); }
+        .top-item .place { font-weight:700; color:#ffa500; width:30px; font-size:16px; }
+        .top-item .info { flex:1; color:#fff; font-size:14px; }
+        .top-item .info .sub { color:rgba(255,255,255,0.2); font-size:11px; }
+        .top-item .score { color:#ffa500; font-weight:600; }
+        .top-empty { color:rgba(255,255,255,0.1); text-align:center; padding:20px 0; }
+
+        /* Наставники */
+        .mentor-item { display:flex; align-items:center; gap:14px; padding:12px 16px; background:rgba(255,255,255,0.02); border-radius:16px; border:1px solid rgba(255,255,255,0.03); }
+        .mentor-item .avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#ffa500,#ff6b3b); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:16px; flex-shrink:0; }
+        .mentor-item .info { flex:1; color:#fff; font-size:14px; }
+        .mentor-item .info .sub { color:rgba(255,255,255,0.2); font-size:11px; }
+        .mentor-item .status { font-size:12px; color:rgba(255,255,255,0.2); }
+        .mentor-item .status.online { color:#4caf50; }
+        .mentor-empty { color:rgba(255,255,255,0.15); text-align:center; padding:20px 0; }
+        .mentor-apply-btn { background:linear-gradient(135deg,#ffa500,#ff6b3b); border:none; color:#fff; padding:12px; border-radius:40px; font-weight:600; font-size:14px; cursor:pointer; transition:0.2s; width:100%; font-family:'Inter',sans-serif; }
+        .mentor-apply-btn:hover { transform:scale(1.02); }
+
+        /* Modal for admin password */
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); z-index:1000; display:none; align-items:center; justify-content:center; }
+        .modal-overlay.open { display:flex; }
+        .modal-box { background:rgba(20,20,30,0.95); border-radius:32px; padding:30px; width:90%; max-width:380px; border:1px solid rgba(255,165,0,0.1); box-shadow:0 24px 64px rgba(0,0,0,0.8); }
+        .modal-box h3 { color:#fff; font-size:20px; font-weight:700; margin-bottom:16px; }
+        .modal-box input { width:100%; padding:14px; border-radius:40px; border:1px solid rgba(255,165,0,0.2); background:rgba(255,255,255,0.03); color:#fff; font-size:16px; outline:none; margin-bottom:16px; font-family:'Inter',sans-serif; }
+        .modal-box input:focus { border-color:#ffa500; }
+        .modal-box .btn-row { display:flex; gap:10px; }
+        .modal-box .btn-row button { flex:1; padding:12px; border-radius:40px; border:none; font-weight:600; font-size:14px; cursor:pointer; transition:0.2s; font-family:'Inter',sans-serif; }
+        .modal-box .btn-row .btn-cancel { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.5); }
+        .modal-box .btn-row .btn-cancel:hover { background:rgba(255,255,255,0.1); }
+        .modal-box .btn-row .btn-confirm { background:linear-gradient(135deg,#ffa500,#ff6b3b); color:#fff; }
+        .modal-box .btn-row .btn-confirm:hover { transform:scale(1.02); }
+
+        /* Bottom nav */
+        .bottom-nav { display:flex; justify-content:space-around; align-items:center; padding:8px 16px 14px 16px; background:rgba(0,0,0,0.3); backdrop-filter:blur(16px); border-top:1px solid rgba(255,255,255,0.03); flex-shrink:0; }
+        .bottom-nav .nav-item { display:flex; flex-direction:column; align-items:center; gap:2px; background:transparent; border:none; color:rgba(255,255,255,0.2); font-size:9px; font-weight:500; cursor:pointer; transition:all 0.3s ease; padding:4px 12px; border-radius:30px; font-family:'Inter',sans-serif; }
+        .bottom-nav .nav-item i { font-size:22px; transition:0.3s; }
+        .bottom-nav .nav-item span { text-transform:uppercase; letter-spacing:0.5px; }
+        .bottom-nav .nav-item.active { color:#ffa500; }
+        .bottom-nav .nav-item.active i { text-shadow:0 0 30px rgba(255,165,0,0.15); }
+        .bottom-nav .nav-item:hover { color:#fff; background:rgba(255,255,255,0.02); }
+
+        /* Toast */
+        .toast-container { position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none; }
+        .toast { background:rgba(16,16,20,0.92); backdrop-filter:blur(24px); padding:12px 28px; border-radius:60px; color:#fff; font-weight:500; border:1px solid rgba(255,165,0,0.15); box-shadow:0 24px 64px rgba(0,0,0,0.8); font-family:'Inter',sans-serif; animation:slideUp 0.5s ease; max-width:90%; text-align:center; font-size:14px; pointer-events:auto; }
+        @keyframes slideUp { 0% { opacity:0; transform:translateY(30px); } 100% { opacity:1; transform:translateY(0); } }
+
+        @media (max-width:600px) {
+            .top-nav { padding:10px 14px 8px 14px; flex-wrap:wrap; gap:6px; }
+            .top-nav .logo { font-size:17px; }
+            .top-nav .tab-btn { font-size:10px; padding:4px 10px; }
+            .top-nav .tab-btn i { margin-right:3px; font-size:11px; }
+            .page { padding:14px 14px 10px 14px; gap:14px; }
+            .nft-grid { grid-template-columns:1fr 1fr; gap:10px; }
+            .nft-card { padding:12px; }
+            .nft-card .nft-title { font-size:12px; }
+            .stats-row { grid-template-columns:1fr 1fr 1fr 1fr; gap:6px; }
+            .stat-box { padding:8px 4px; }
+            .stat-box .stat-value { font-size:15px; }
+            .stat-box .stat-label { font-size:8px; }
+            .user-profile { padding:10px 14px; }
+            .user-profile .avatar { width:40px; height:40px; font-size:18px; }
+            .user-profile .user-info .name { font-size:14px; }
+            .user-profile .user-balance .amount { font-size:15px; }
+            .bottom-nav .nav-item i { font-size:20px; }
+            .bottom-nav .nav-item span { font-size:8px; }
+            .bottom-nav .nav-item { padding:2px 8px; }
+            .more-menu .more-item { padding:12px 14px; font-size:14px; }
         }
-        @media (max-width: 400px) {
-            .top-nav .tab-btn {
-                font-size: 9px;
-                padding: 3px 8px;
-            }
-            .nft-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .stats-row {
-                grid-template-columns: 1fr 1fr;
-            }
-            .stat-box:last-child {
-                display: none;
-            }
+        @media (max-width:400px) {
+            .top-nav .tab-btn { font-size:9px; padding:3px 8px; }
+            .nft-grid { grid-template-columns:1fr 1fr; }
+            .stats-row { grid-template-columns:1fr 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <!-- PRELOADER -->
-    <div id="preloader">
-        <div class="preloader-content">
-            <div class="rocket"><i class="fas fa-rocket"></i></div>
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill" style="width:0%;"></div>
-                </div>
-                <div class="progress-text">LOADING <span id="progressPercent">0</span>%</div>
-            </div>
-            <div class="preloader-sub">Ryzen Team</div>
+<!-- PRELOADER -->
+<div id="preloader">
+    <div class="preloader-content">
+        <div class="rocket"><i class="fas fa-rocket"></i></div>
+        <div class="progress-container">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
+            <div class="progress-text">LOADING <span id="progressPercent">0</span>%</div>
+        </div>
+        <div class="preloader-sub">Ryzen Team</div>
+    </div>
+</div>
+
+<!-- MAIN PANEL -->
+<div class="glass-panel" id="panel">
+
+    <!-- Top navigation -->
+    <div class="top-nav">
+        <div class="logo"><i class="fas fa-bolt"></i> Ryzen</div>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="gifts"><i class="fas fa-gift"></i> Подарки</button>
+            <button class="tab-btn" data-tab="payout"><i class="fas fa-hand-holding-usd"></i> Выплаты</button>
+            <button class="tab-btn" data-tab="invite"><i class="fas fa-user-plus"></i> Пригласить</button>
+            <button class="tab-btn" data-tab="more"><i class="fas fa-ellipsis-h"></i> Ещё</button>
         </div>
     </div>
 
-    <!-- ОСНОВНАЯ ПАНЕЛЬ -->
-    <div class="glass-panel" id="panel">
+    <!-- Main content -->
+    <div class="main-content" id="mainContent">
 
-        <!-- Верхняя навигация -->
-        <div class="top-nav">
-            <div class="logo"><i class="fas fa-bolt"></i> Ryzen</div>
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="gifts"><i class="fas fa-gift"></i> Подарки</button>
-                <button class="tab-btn" data-tab="payout"><i class="fas fa-hand-holding-usd"></i> Выплаты</button>
-                <button class="tab-btn" data-tab="invite"><i class="fas fa-user-plus"></i> Пригласить</button>
-                <button class="tab-btn" id="adminTabBtn" data-tab="admin" style="display:none;"><i class="fas fa-user-shield"></i> Админ</button>
+        <!-- PAGE: GIFTS -->
+        <div class="page active" id="page-gifts">
+            <div class="user-profile">
+                <div class="avatar" id="avatarContainer"><span id="avatarLetter">R</span></div>
+                <div class="user-info">
+                    <div class="name" id="displayName">Загрузка...</div>
+                    <div class="handle" id="userHandle">@user</div>
+                </div>
+                <div class="user-balance">
+                    <div class="amount" id="balanceDisplay">0.00</div>
+                    <div class="label">ETH</div>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-coins"></i></div>
+                    <div class="stat-value none" id="statTon">—</div>
+                    <div class="stat-label">ТОН</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-value none" id="statProfit">—</div>
+                    <div class="stat-label">ПРОФИТ</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-map-pin"></i></div>
+                    <div class="stat-value none" id="statPlace">—</div>
+                    <div class="stat-label">МЕСТО</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                    <div class="stat-value none" id="statStreak">—</div>
+                    <div class="stat-label">СТРИК</div>
+                </div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="color:rgba(255,255,255,0.3);font-size:12px;text-transform:uppercase;letter-spacing:1px;">Витрина подарков</span>
+                <span style="color:rgba(255,255,255,0.15);font-size:11px;">USDT · Заявки · Топ</span>
+            </div>
+            <div class="nft-grid" id="nftGrid">
+                <!-- Здесь будут динамически отображаться наворканные NFT, пока заглушка -->
+                <div class="nft-empty">У вас пока нет наворканных подарков</div>
             </div>
         </div>
 
-        <!-- Контент -->
-        <div class="main-content" id="mainContent">
-
-            <!-- СТРАНИЦА: ПОДАРКИ (витрина) -->
-            <div class="page active" id="page-gifts">
-                <!-- Профиль пользователя -->
-                <div class="user-profile">
-                    <div class="avatar" id="avatarContainer"><span id="avatarLetter">R</span></div>
-                    <div class="user-info">
-                        <div class="name" id="displayName">Загрузка...</div>
-                        <div class="handle" id="userHandle">@user</div>
+        <!-- PAGE: PAYOUT -->
+        <div class="page" id="page-payout">
+            <div style="background:rgba(255,255,255,0.02);border-radius:24px;padding:20px;border:1px solid rgba(255,255,255,0.03);">
+                <h3 style="color:#fff;font-size:18px;font-weight:600;margin-bottom:16px;"><i class="fas fa-hand-holding-usd" style="color:#ffa500;margin-right:10px;"></i>Запросить выплату</h3>
+                <div class="payout-form">
+                    <div class="form-group">
+                        <label>NFT-подарок</label>
+                        <select id="payoutNft">
+                            <option value="Vintage Cigar #24057">Vintage Cigar #24057</option>
+                            <option value="CyberPunk #1337">CyberPunk #1337</option>
+                            <option value="Gemstone #009">Gemstone #009</option>
+                            <option value="Dragon Scale #42">Dragon Scale #42</option>
+                        </select>
                     </div>
-                    <div class="user-balance">
-                        <div class="amount" id="balanceDisplay">0.00</div>
-                        <div class="label">ETH</div>
+                    <div class="form-group">
+                        <label>Кошелёк TON</label>
+                        <input type="text" id="payoutWallet" placeholder="EQD... или UQD..." value="EQD1234567890abcdef">
                     </div>
-                </div>
-
-                <!-- Статистика -->
-                <div class="stats-row">
-                    <div class="stat-box">
-                        <div class="stat-icon"><i class="fas fa-coins"></i></div>
-                        <div class="stat-value">0.00</div>
-                        <div class="stat-label">ТОН</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-                        <div class="stat-value">+12%</div>
-                        <div class="stat-label">ПРОФИТ</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-icon"><i class="fas fa-map-pin"></i></div>
-                        <div class="stat-value">#4</div>
-                        <div class="stat-label">МЕСТО</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-icon"><i class="fas fa-fire"></i></div>
-                        <div class="stat-value">7</div>
-                        <div class="stat-label">СТРИК</div>
-                    </div>
-                </div>
-
-                <!-- Витрина NFT -->
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                    <span style="color:rgba(255,255,255,0.3);font-size:12px;text-transform:uppercase;letter-spacing:1px;">Витрина подарков</span>
-                    <span style="color:rgba(255,255,255,0.15);font-size:11px;">USDT · Заявки · Топ</span>
-                </div>
-                <div class="nft-grid" id="nftGrid">
-                    <div class="nft-card" data-nft="Vintage Cigar #24057">
-                        <div class="nft-img"><i class="fas fa-crown"></i></div>
-                        <div class="nft-title">Vintage Cigar #24057</div>
-                        <div class="nft-sub">Эксклюзив</div>
-                        <div class="nft-price">0.12 ETH</div>
-                    </div>
-                    <div class="nft-card" data-nft="CyberPunk #1337">
-                        <div class="nft-img"><i class="fas fa-robot"></i></div>
-                        <div class="nft-title">CyberPunk #1337</div>
-                        <div class="nft-sub">Редкий</div>
-                        <div class="nft-price">0.08 ETH</div>
-                    </div>
-                    <div class="nft-card" data-nft="Gemstone #009">
-                        <div class="nft-img"><i class="fas fa-gem"></i></div>
-                        <div class="nft-title">Gemstone #009</div>
-                        <div class="nft-sub">Легендарный</div>
-                        <div class="nft-price">0.25 ETH</div>
-                    </div>
-                    <div class="nft-card" data-nft="Dragon Scale #42">
-                        <div class="nft-img"><i class="fas fa-dragon"></i></div>
-                        <div class="nft-title">Dragon Scale #42</div>
-                        <div class="nft-sub">Ультра редкий</div>
-                        <div class="nft-price">0.45 ETH</div>
-                    </div>
+                    <button class="payout-request-btn" id="payoutBtn"><i class="fas fa-paper-plane" style="margin-right:10px;"></i>Отправить заявку</button>
                 </div>
             </div>
+        </div>
 
-            <!-- СТРАНИЦА: ВЫПЛАТЫ (форма) -->
-            <div class="page" id="page-payout">
-                <div style="background:rgba(255,255,255,0.02);border-radius:24px;padding:20px;border:1px solid rgba(255,255,255,0.03);">
-                    <h3 style="color:#fff;font-size:18px;font-weight:600;margin-bottom:16px;"><i class="fas fa-hand-holding-usd" style="color:#ffa500;margin-right:10px;"></i>Запросить выплату</h3>
-                    <div class="payout-form">
-                        <div class="form-group">
-                            <label>NFT-подарок</label>
-                            <select id="payoutNft">
-                                <option value="Vintage Cigar #24057">Vintage Cigar #24057</option>
-                                <option value="CyberPunk #1337">CyberPunk #1337</option>
-                                <option value="Gemstone #009">Gemstone #009</option>
-                                <option value="Dragon Scale #42">Dragon Scale #42</option>
-                            </select>
+        <!-- PAGE: INVITE -->
+        <div class="page" id="page-invite">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(255,255,255,0.01);border-radius:32px;border:1px solid rgba(255,255,255,0.02);padding:30px;">
+                <i class="fas fa-user-plus" style="font-size:60px;color:#ffa500;opacity:0.3;"></i>
+                <h3 style="color:#fff;font-size:22px;font-weight:700;">ПРИГЛАШАЙ И ЗАРАБАТЫВАЙ</h3>
+                <p style="color:rgba(255,255,255,0.3);text-align:center;font-size:14px;">Приглашай друзей и получай бонусы<br>за каждого нового участника</p>
+                <button class="payout-request-btn" style="max-width:280px;" id="inviteBtn"><i class="fas fa-share-alt" style="margin-right:10px;"></i>Пригласить друзей</button>
+            </div>
+        </div>
+
+        <!-- PAGE: MORE -->
+        <div class="page" id="page-more">
+            <!-- Submenu -->
+            <div class="more-menu">
+                <button class="more-item" data-sub="settings"><i class="fas fa-cog"></i> Настройки <span class="arrow"><i class="fas fa-chevron-right"></i></span></button>
+                <button class="more-item" data-sub="top"><i class="fas fa-trophy"></i> Топ <span class="arrow"><i class="fas fa-chevron-right"></i></span></button>
+                <button class="more-item" data-sub="mentors"><i class="fas fa-users"></i> Наставники <span class="arrow"><i class="fas fa-chevron-right"></i></span></button>
+                <button class="more-item" data-sub="admin"><i class="fas fa-user-shield"></i> Стать админом <span class="arrow"><i class="fas fa-chevron-right"></i></span></button>
+            </div>
+
+            <!-- Sub-content: Настройки -->
+            <div class="more-content" id="sub-settings">
+                <div class="glass-card" style="background:rgba(255,255,255,0.02);border-radius:20px;padding:16px;border:1px solid rgba(255,255,255,0.03);">
+                    <div class="setting-toggle" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.02);">
+                        <span style="color:rgba(255,255,255,0.6);font-size:14px;"><i class="fas fa-moon" style="margin-right:8px;color:#ffa500;"></i>Тёмная тема</span>
+                        <div class="toggle-switch active" id="themeToggle" style="width:44px;height:24px;background:rgba(255,255,255,0.06);border-radius:40px;position:relative;cursor:pointer;transition:0.3s;border:1px solid rgba(255,255,255,0.02);">
+                            <div style="position:absolute;top:2px;left:22px;width:18px;height:18px;background:#fff;border-radius:50%;transition:0.3s;"></div>
                         </div>
-                        <div class="form-group">
-                            <label>Кошелёк TON</label>
-                            <input type="text" id="payoutWallet" placeholder="EQD... или UQD..." value="EQD1234567890abcdef">
+                    </div>
+                    <div class="setting-toggle" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.02);">
+                        <span style="color:rgba(255,255,255,0.6);font-size:14px;"><i class="fas fa-bell" style="margin-right:8px;color:#ffa500;"></i>Уведомления</span>
+                        <div class="toggle-switch active" id="notifToggle" style="width:44px;height:24px;background:rgba(255,255,255,0.06);border-radius:40px;position:relative;cursor:pointer;transition:0.3s;border:1px solid rgba(255,255,255,0.02);">
+                            <div style="position:absolute;top:2px;left:22px;width:18px;height:18px;background:#fff;border-radius:50%;transition:0.3s;"></div>
                         </div>
-                        <button class="payout-request-btn" id="payoutBtn"><i class="fas fa-paper-plane" style="margin-right:10px;"></i>Отправить заявку</button>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;">
+                        <span style="color:rgba(255,255,255,0.6);font-size:14px;"><i class="fas fa-globe" style="margin-right:8px;color:#ffa500;"></i>Язык</span>
+                        <span style="color:#ffa500;font-weight:500;">RU</span>
                     </div>
                 </div>
             </div>
 
-            <!-- СТРАНИЦА: ПРИГЛАСИТЬ -->
-            <div class="page" id="page-invite">
-                <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(255,255,255,0.01);border-radius:32px;border:1px solid rgba(255,255,255,0.02);padding:30px;">
-                    <i class="fas fa-user-plus" style="font-size:60px;color:#ffa500;opacity:0.3;"></i>
-                    <h3 style="color:#fff;font-size:22px;font-weight:700;">ПРИГЛАШАЙ И ЗАРАБАТЫВАЙ</h3>
-                    <p style="color:rgba(255,255,255,0.3);text-align:center;font-size:14px;">Приглашай друзей и получай бонусы<br>за каждого нового участника</p>
-                    <button class="payout-request-btn" style="max-width:280px;" id="inviteBtn"><i class="fas fa-share-alt" style="margin-right:10px;"></i>Пригласить друзей</button>
+            <!-- Sub-content: Топ -->
+            <div class="more-content" id="sub-top">
+                <div class="top-tabs" id="topTabs">
+                    <button class="top-tab active" data-period="day">День</button>
+                    <button class="top-tab" data-period="week">Неделя</button>
+                    <button class="top-tab" data-period="month">Месяц</button>
+                    <button class="top-tab" data-period="all">Всё время</button>
+                </div>
+                <div class="top-list" id="topList">
+                    <div class="top-empty">Нет данных для отображения</div>
                 </div>
             </div>
 
-            <!-- СТРАНИЦА: АДМИНКА -->
-            <div class="page" id="page-admin">
-                <div style="background:rgba(255,255,255,0.02);border-radius:24px;padding:20px;border:1px solid rgba(255,255,255,0.03);flex:1;display:flex;flex-direction:column;">
-                    <h3 style="color:#fff;font-size:18px;font-weight:600;margin-bottom:16px;"><i class="fas fa-user-shield" style="color:#ffa500;margin-right:10px;"></i>Админ-панель</h3>
-                    <div class="admin-panel" id="adminPanel" style="flex:1;">
-                        <div class="admin-empty">📭 Нет заявок на выплату</div>
+            <!-- Sub-content: Наставники -->
+            <div class="more-content" id="sub-mentors">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div class="mentor-empty">Пока нет наставников</div>
+                    <button class="mentor-apply-btn" id="applyMentorBtn"><i class="fas fa-paper-plane" style="margin-right:8px;"></i>Подать заявку на наставника</button>
+                </div>
+            </div>
+
+            <!-- Sub-content: Админ (пароль) -->
+            <div class="more-content" id="sub-admin">
+                <div style="background:rgba(255,255,255,0.02);border-radius:20px;padding:20px;border:1px solid rgba(255,255,255,0.03);text-align:center;">
+                    <i class="fas fa-lock" style="font-size:40px;color:#ffa500;opacity:0.3;margin-bottom:12px;"></i>
+                    <h4 style="color:#fff;margin-bottom:12px;">Введите пароль администратора</h4>
+                    <input type="password" id="adminPassInput" placeholder="Пароль" style="width:100%;padding:14px;border-radius:40px;border:1px solid rgba(255,165,0,0.2);background:rgba(255,255,255,0.03);color:#fff;font-size:16px;outline:none;margin-bottom:16px;font-family:'Inter',sans-serif;">
+                    <button id="adminLoginBtn" style="background:linear-gradient(135deg,#ffa500,#ff6b3b);border:none;color:#fff;padding:14px;border-radius:40px;width:100%;font-weight:700;font-size:16px;cursor:pointer;transition:0.2s;font-family:'Inter',sans-serif;">Войти</button>
+                    <div id="adminError" style="color:#ff6b6b;font-size:13px;margin-top:10px;display:none;">Неверный пароль</div>
+                </div>
+                <!-- Панель админа (показывается после входа) -->
+                <div id="adminPanelWrapper" style="display:none;">
+                    <div style="background:rgba(255,255,255,0.02);border-radius:20px;padding:20px;border:1px solid rgba(255,165,0,0.1);">
+                        <h4 style="color:#fff;margin-bottom:12px;"><i class="fas fa-user-shield" style="color:#ffa500;margin-right:8px;"></i>Админ-панель</h4>
+                        <div class="admin-panel" id="adminPanel">
+                            <div class="admin-empty">📭 Нет заявок на выплату</div>
+                        </div>
+                        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+                            <button id="adminBroadcastBtn" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#fff;padding:10px;border-radius:40px;font-weight:500;cursor:pointer;transition:0.2s;font-family:'Inter',sans-serif;">📢 Сделать рассылку</button>
+                            <button id="adminBanBtn" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);color:#fff;padding:10px;border-radius:40px;font-weight:500;cursor:pointer;transition:0.2s;font-family:'Inter',sans-serif;">🚫 Забанить пользователя</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- Нижняя навигация -->
-        <div class="bottom-nav" id="bottomNav">
-            <button class="nav-item active" data-page="gifts"><i class="fas fa-home"></i><span>Главная</span></button>
-            <button class="nav-item" data-page="payout"><i class="fas fa-dollar-sign"></i><span>Профит</span></button>
-            <button class="nav-item" data-page="invite"><i class="fas fa-trophy"></i><span>Топ</span></button>
-            <button class="nav-item" id="bottomAdminBtn" data-page="admin" style="display:none;"><i class="fas fa-user-shield"></i><span>Админ</span></button>
-        </div>
     </div>
 
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- Bottom navigation -->
+    <div class="bottom-nav" id="bottomNav">
+        <button class="nav-item active" data-page="gifts"><i class="fas fa-home"></i><span>Главная</span></button>
+        <button class="nav-item" data-page="payout"><i class="fas fa-dollar-sign"></i><span>Профит</span></button>
+        <button class="nav-item" data-page="invite"><i class="fas fa-trophy"></i><span>Топ</span></button>
+        <button class="nav-item" data-page="more"><i class="fas fa-ellipsis-h"></i><span>Ещё</span></button>
+    </div>
+</div>
 
-    <script>
-        (function() {
-            'use strict';
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
 
-            // ===== PRELOADER =====
-            const preloader = document.getElementById('preloader');
-            const progressFill = document.getElementById('progressFill');
-            const progressPercent = document.getElementById('progressPercent');
-            const panel = document.getElementById('panel');
-            const steps = [0, 25, 50, 75, 100];
-            let stepIndex = 0;
+<script>
+    (function() {
+        'use strict';
 
-            function updateProgress() {
-                if (stepIndex >= steps.length) {
-                    preloader.classList.add('hidden');
-                    panel.classList.add('visible');
-                    return;
-                }
-                const target = steps[stepIndex];
-                const start = stepIndex === 0 ? 0 : steps[stepIndex - 1];
-                const duration = 600;
-                const startTime = performance.now();
+        // ===== PRELOADER =====
+        const preloader = document.getElementById('preloader');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const panel = document.getElementById('panel');
+        const steps = [0, 25, 50, 75, 100];
+        let stepIndex = 0;
 
-                function animateProgress(currentTime) {
-                    const elapsed = currentTime - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    const eased = 1 - Math.pow(1 - progress, 3);
-                    const currentValue = start + (target - start) * eased;
-                    progressFill.style.width = currentValue + '%';
-                    progressPercent.textContent = Math.round(currentValue);
-                    if (progress < 1) {
-                        requestAnimationFrame(animateProgress);
-                    } else {
-                        stepIndex++;
-                        setTimeout(updateProgress, 300);
-                    }
-                }
-                requestAnimationFrame(animateProgress);
+        function updateProgress() {
+            if (stepIndex >= steps.length) {
+                preloader.classList.add('hidden');
+                panel.classList.add('visible');
+                return;
             }
-            setTimeout(updateProgress, 400);
+            const target = steps[stepIndex];
+            const start = stepIndex === 0 ? 0 : steps[stepIndex - 1];
+            const duration = 600;
+            const startTime = performance.now();
 
-            // ===== ДАННЫЕ ПОЛЬЗОВАТЕЛЯ =====
-            let userData = {};
-            let isAdmin = false;
-            const ADMIN_ID = 8297446667;
-
-            if (window.Telegram && Telegram.WebApp) {
-                const user = Telegram.WebApp.initDataUnsafe.user;
-                if (user) {
-                    userData = {
-                        id: user.id,
-                        firstName: user.first_name || 'User',
-                        lastName: user.last_name || '',
-                        username: user.username || 'user',
-                        photoUrl: user.photo_url || null
-                    };
-                    if (user.id == ADMIN_ID) {
-                        isAdmin = true;
-                        document.getElementById('adminTabBtn').style.display = 'flex';
-                        document.getElementById('bottomAdminBtn').style.display = 'flex';
-                    }
-                }
-            }
-
-            // ===== АВАТАР =====
-            const avatarContainer = document.getElementById('avatarContainer');
-            const avatarLetter = document.getElementById('avatarLetter');
-            if (userData.photoUrl) {
-                const img = document.createElement('img');
-                img.src = userData.photoUrl;
-                img.alt = 'avatar';
-                avatarContainer.innerHTML = '';
-                avatarContainer.appendChild(img);
-            } else {
-                avatarLetter.textContent = (userData.firstName ? userData.firstName[0] : 'R').toUpperCase();
-            }
-
-            // ===== ИМЯ И ЮЗЕРНЕЙМ =====
-            const displayName = document.getElementById('displayName');
-            const userHandle = document.getElementById('userHandle');
-            const fullName = userData.firstName + (userData.lastName ? ' ' + userData.lastName : '');
-            displayName.textContent = fullName || 'Ryzen User';
-            userHandle.textContent = userData.username ? '@' + userData.username : '@user';
-
-            // ===== БАЛАНС =====
-            let currentBalance = parseFloat(localStorage.getItem('userBalance')) || 0;
-            const balanceElement = document.getElementById('balanceDisplay');
-
-            function updateBalanceUI(newBalance) {
-                currentBalance = newBalance;
-                balanceElement.textContent = newBalance.toFixed(2);
-                localStorage.setItem('userBalance', newBalance.toString());
-                balanceElement.classList.remove('balance-update');
-                void balanceElement.offsetWidth;
-                balanceElement.classList.add('balance-update');
-            }
-            updateBalanceUI(currentBalance);
-
-            // ===== ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ =====
-            const topTabs = document.querySelectorAll('.top-nav .tab-btn');
-            const bottomNav = document.querySelectorAll('.bottom-nav .nav-item');
-            const pages = {
-                gifts: document.getElementById('page-gifts'),
-                payout: document.getElementById('page-payout'),
-                invite: document.getElementById('page-invite'),
-                admin: document.getElementById('page-admin')
-            };
-
-            function switchPage(pageId) {
-                Object.values(pages).forEach(p => p.classList.remove('active'));
-                if (pages[pageId]) pages[pageId].classList.add('active');
-
-                topTabs.forEach(t => t.classList.remove('active'));
-                document.querySelector(`.top-nav .tab-btn[data-tab="${pageId}"]`)?.classList.add('active');
-
-                bottomNav.forEach(n => n.classList.remove('active'));
-                document.querySelector(`.bottom-nav .nav-item[data-page="${pageId}"]`)?.classList.add('active');
-            }
-
-            topTabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tab = this.dataset.tab;
-                    if (tab && pages[tab]) switchPage(tab);
-                });
-            });
-
-            bottomNav.forEach(item => {
-                item.addEventListener('click', function() {
-                    const page = this.dataset.page;
-                    if (page && pages[page]) switchPage(page);
-                });
-            });
-
-            // ===== КЛИК ПО NFT (выбор для выплаты) =====
-            document.querySelectorAll('.nft-card').forEach(card => {
-                card.addEventListener('click', function() {
-                    const nft = this.dataset.nft;
-                    document.getElementById('payoutNft').value = nft;
-                    switchPage('payout');
-                    showToast('🖼 Выбран NFT: ' + nft);
-                });
-            });
-
-            // ===== ПРИГЛАШЕНИЕ =====
-            document.getElementById('inviteBtn').addEventListener('click', function() {
-                const link = 'https://t.me/ryzenpanelsbot?start=ref_' + (userData.id || '000');
-                if (navigator.share) {
-                    navigator.share({ title: 'Ryzen Team', text: 'Присоединяйся к Ryzen Team!', url: link });
+            function animateProgress(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const currentValue = start + (target - start) * eased;
+                progressFill.style.width = currentValue + '%';
+                progressPercent.textContent = Math.round(currentValue);
+                if (progress < 1) {
+                    requestAnimationFrame(animateProgress);
                 } else {
-                    navigator.clipboard.writeText(link).then(() => {
-                        showToast('✅ Ссылка скопирована!');
-                    });
+                    stepIndex++;
+                    setTimeout(updateProgress, 300);
+                }
+            }
+            requestAnimationFrame(animateProgress);
+        }
+        setTimeout(updateProgress, 400);
+
+        // ===== USER DATA =====
+        let userData = {};
+        let isAdmin = false;
+        const ADMIN_ID = 8297446667;
+
+        if (window.Telegram && Telegram.WebApp) {
+            const user = Telegram.WebApp.initDataUnsafe.user;
+            if (user) {
+                userData = {
+                    id: user.id,
+                    firstName: user.first_name || 'User',
+                    lastName: user.last_name || '',
+                    username: user.username || 'user',
+                    photoUrl: user.photo_url || null
+                };
+                if (user.id == ADMIN_ID) {
+                    isAdmin = true;
+                }
+            }
+        }
+
+        // Avatar
+        const avatarContainer = document.getElementById('avatarContainer');
+        const avatarLetter = document.getElementById('avatarLetter');
+        if (userData.photoUrl) {
+            const img = document.createElement('img');
+            img.src = userData.photoUrl;
+            img.alt = 'avatar';
+            avatarContainer.innerHTML = '';
+            avatarContainer.appendChild(img);
+        } else {
+            avatarLetter.textContent = (userData.firstName ? userData.firstName[0] : 'R').toUpperCase();
+        }
+
+        // Name & username
+        const displayName = document.getElementById('displayName');
+        const userHandle = document.getElementById('userHandle');
+        const fullName = userData.firstName + (userData.lastName ? ' ' + userData.lastName : '');
+        displayName.textContent = fullName || 'Ryzen User';
+        userHandle.textContent = userData.username ? '@' + userData.username : '@user';
+
+        // Balance
+        let currentBalance = parseFloat(localStorage.getItem('userBalance')) || 0;
+        const balanceElement = document.getElementById('balanceDisplay');
+        function updateBalanceUI(newBalance) {
+            currentBalance = newBalance;
+            balanceElement.textContent = newBalance.toFixed(2);
+            localStorage.setItem('userBalance', newBalance.toString());
+            balanceElement.classList.remove('balance-update');
+            void balanceElement.offsetWidth;
+            balanceElement.classList.add('balance-update');
+        }
+        updateBalanceUI(currentBalance);
+
+        // Statistics (placeholder)
+        document.getElementById('statTon').textContent = '—';
+        document.getElementById('statProfit').textContent = '—';
+        document.getElementById('statPlace').textContent = '—';
+        document.getElementById('statStreak').textContent = '—';
+
+        // ===== PAGE SWITCHING =====
+        const topTabs = document.querySelectorAll('.top-nav .tab-btn');
+        const bottomNav = document.querySelectorAll('.bottom-nav .nav-item');
+        const pages = {
+            gifts: document.getElementById('page-gifts'),
+            payout: document.getElementById('page-payout'),
+            invite: document.getElementById('page-invite'),
+            more: document.getElementById('page-more')
+        };
+
+        function switchPage(pageId) {
+            Object.values(pages).forEach(p => p.classList.remove('active'));
+            if (pages[pageId]) pages[pageId].classList.add('active');
+
+            topTabs.forEach(t => t.classList.remove('active'));
+            document.querySelector(`.top-nav .tab-btn[data-tab="${pageId}"]`)?.classList.add('active');
+
+            bottomNav.forEach(n => n.classList.remove('active'));
+            document.querySelector(`.bottom-nav .nav-item[data-page="${pageId}"]`)?.classList.add('active');
+
+            // Если открываем "more", показываем первый подпункт (настройки)
+            if (pageId === 'more') {
+                showSub('settings');
+            }
+        }
+
+        topTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.dataset.tab;
+                if (tabId && pages[tabId]) switchPage(tabId);
+            });
+        });
+
+        bottomNav.forEach(item => {
+            item.addEventListener('click', function() {
+                const page = this.dataset.page;
+                if (page && pages[page]) switchPage(page);
+            });
+        });
+
+        // ===== MORE SUB-MENU =====
+        const moreItems = document.querySelectorAll('.more-item');
+        const subContents = {
+            settings: document.getElementById('sub-settings'),
+            top: document.getElementById('sub-top'),
+            mentors: document.getElementById('sub-mentors'),
+            admin: document.getElementById('sub-admin')
+        };
+
+        function showSub(subId) {
+            Object.values(subContents).forEach(el => el.classList.remove('active'));
+            if (subContents[subId]) subContents[subId].classList.add('active');
+            moreItems.forEach(item => {
+                item.style.background = 'transparent';
+                if (item.dataset.sub === subId) {
+                    item.style.background = 'rgba(255,165,0,0.06)';
                 }
             });
+        }
 
-            // ===== ОТПРАВКА ЗАЯВКИ =====
-            const payoutBtn = document.getElementById('payoutBtn');
-            const payoutNft = document.getElementById('payoutNft');
-            const payoutWallet = document.getElementById('payoutWallet');
-
-            if (payoutBtn) {
-                payoutBtn.addEventListener('click', function() {
-                    const nft = payoutNft.value;
-                    const wallet = payoutWallet.value.trim();
-                    if (!wallet || wallet.length < 6) {
-                        showToast('⚠️ Введите корректный кошелёк TON.', '#ff9800');
-                        return;
-                    }
-                    if (window.Telegram && Telegram.WebApp) {
-                        const data = JSON.stringify({ nft, wallet });
-                        Telegram.WebApp.sendData(data);
-                        showToast('✅ Заявка отправлена!', '#4caf50');
-                        payoutWallet.value = '';
-                        if (isAdmin && document.getElementById('page-admin').classList.contains('active')) {
+        moreItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const sub = this.dataset.sub;
+                if (sub && subContents[sub]) {
+                    showSub(sub);
+                    // Если кликнули "Стать админом", показываем форму входа
+                    if (sub === 'admin') {
+                        document.getElementById('adminPanelWrapper').style.display = 'none';
+                        document.getElementById('adminPassInput').value = '';
+                        document.getElementById('adminError').style.display = 'none';
+                        // Если уже админ, показываем панель сразу
+                        if (isAdmin) {
+                            document.getElementById('adminPanelWrapper').style.display = 'block';
                             loadAdminRequests();
                         }
-                    } else {
-                        alert('Заявка: ' + nft + ', ' + wallet);
                     }
-                });
+                }
+            });
+        });
+
+        // По умолчанию показываем настройки в "Ещё"
+        showSub('settings');
+
+        // ===== ТОГГЛЫ (настройки) =====
+        const themeToggle = document.getElementById('themeToggle');
+        const notifToggle = document.getElementById('notifToggle');
+        // (простая имитация, без реальной смены темы для краткости)
+        themeToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            // меняем положение ползунка
+            const dot = this.querySelector('div');
+            if (this.classList.contains('active')) {
+                dot.style.left = '22px';
+            } else {
+                dot.style.left = '2px';
             }
+        });
+        notifToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            const dot = this.querySelector('div');
+            if (this.classList.contains('active')) {
+                dot.style.left = '22px';
+            } else {
+                dot.style.left = '2px';
+            }
+        });
 
-            // ===== АДМИНКА =====
-            let adminRequests = JSON.parse(localStorage.getItem('adminRequests') || '[]');
+        // ===== ТОП-ТАБЫ =====
+        const topTabsPeriod = document.querySelectorAll('.top-tabs .top-tab');
+        const topList = document.getElementById('topList');
+        topTabsPeriod.forEach(tab => {
+            tab.addEventListener('click', function() {
+                topTabsPeriod.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                // Имитация данных
+                const period = this.dataset.period;
+                const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve'];
+                const scores = [120, 95, 70, 55, 30];
+                topList.innerHTML = names.map((n, i) => `
+                    <div class="top-item">
+                        <span class="place">${i+1}</span>
+                        <div class="info">${n} <div class="sub">${period === 'day' ? 'сегодня' : period === 'week' ? 'за неделю' : period === 'month' ? 'за месяц' : 'за всё время'}</div></div>
+                        <span class="score">${scores[i]}</span>
+                    </div>
+                `).join('');
+            });
+        });
+        // активируем первый таб
+        document.querySelector('.top-tabs .top-tab.active')?.click();
 
-            function loadAdminRequests() {
-                const panel = document.getElementById('adminPanel');
-                if (adminRequests.length === 0) {
-                    panel.innerHTML = '<div class="admin-empty">📭 Нет заявок на выплату</div>';
+        // ===== НАСТАВНИКИ =====
+        document.getElementById('applyMentorBtn').addEventListener('click', function() {
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.sendData(JSON.stringify({ action: 'apply_mentor' }));
+                showToast('✅ Заявка на наставника отправлена!');
+            } else {
+                showToast('✅ Заявка отправлена (демо)');
+            }
+        });
+
+        // ===== АДМИН ВХОД =====
+        const adminPassInput = document.getElementById('adminPassInput');
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        const adminError = document.getElementById('adminError');
+        const adminPanelWrapper = document.getElementById('adminPanelWrapper');
+
+        adminLoginBtn.addEventListener('click', function() {
+            const pass = adminPassInput.value.trim();
+            if (pass === 'qwerty123') {
+                isAdmin = true;
+                adminError.style.display = 'none';
+                adminPanelWrapper.style.display = 'block';
+                loadAdminRequests();
+                showToast('✅ Доступ получен!');
+                // Также сохраняем флаг в localStorage
+                localStorage.setItem('isAdmin', 'true');
+            } else {
+                adminError.style.display = 'block';
+            }
+        });
+
+        // Проверяем, не сохранён ли уже админ-статус
+        if (localStorage.getItem('isAdmin') === 'true') {
+            isAdmin = true;
+            // Если страница уже загружена и мы на вкладке "Ещё" -> покажем панель
+            setTimeout(() => {
+                if (document.getElementById('page-more').classList.contains('active')) {
+                    adminPanelWrapper.style.display = 'block';
+                    loadAdminRequests();
+                }
+            }, 300);
+        }
+
+        // ===== ЗАГРУЗКА ЗАЯВОК ДЛЯ АДМИНА =====
+        let adminRequests = JSON.parse(localStorage.getItem('adminRequests') || '[]');
+
+        function loadAdminRequests() {
+            const panel = document.getElementById('adminPanel');
+            if (!panel) return;
+            if (adminRequests.length === 0) {
+                panel.innerHTML = '<div class="admin-empty">📭 Нет заявок на выплату</div>';
+                return;
+            }
+            panel.innerHTML = '';
+            adminRequests.forEach((req, index) => {
+                const div = document.createElement('div');
+                div.className = 'admin-request';
+                div.innerHTML = `
+                    <div class="info">
+                        <strong>${req.nft}</strong> · ${req.wallet} <br>
+                        <span style="font-size:12px;opacity:0.4;">${req.date}</span>
+                    </div>
+                    <div class="actions">
+                        <button class="accept" data-index="${index}">✅ Принять</button>
+                        <button class="reject" data-index="${index}">❌ Отклонить</button>
+                    </div>
+                `;
+                panel.appendChild(div);
+            });
+
+            panel.querySelectorAll('.accept').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const idx = parseInt(this.dataset.index);
+                    const req = adminRequests[idx];
+                    if (!req) return;
+                    const amount = prompt('Введите сумму выплаты (ETH):', '0.1');
+                    if (amount === null) return;
+                    const val = parseFloat(amount);
+                    if (isNaN(val) || val <= 0) {
+                        showToast('⚠️ Некорректная сумма.', '#ff9800');
+                        return;
+                    }
+                    // Обновляем баланс
+                    updateBalanceUI(currentBalance + val);
+                    // Удаляем заявку
+                    adminRequests.splice(idx, 1);
+                    localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
+                    loadAdminRequests();
+                    showToast(`✅ Выплата ${val} ETH принята!`, '#4caf50');
+                    // Отправляем сообщение в группу и пользователю
+                    sendToGroup(req.nft, val, req.wallet);
+                    // Уведомляем пользователя (если есть бот, здесь будет вызов)
+                    notifyUser(req.nft, val);
+                });
+            });
+            panel.querySelectorAll('.reject').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const idx = parseInt(this.dataset.index);
+                    adminRequests.splice(idx, 1);
+                    localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
+                    loadAdminRequests();
+                    showToast('❌ Заявка отклонена.', '#f44336');
+                });
+            });
+        }
+
+        function sendToGroup(nft, amount, wallet) {
+            const message =
+                `📢 *НОВАЯ ВЫПЛАТА В ГРУППЕ!*\n━━━━━━━━━━━━━━━━━━━\n🖼 NFT: ${nft}\n💰 Сумма: ${amount} ETH\n💳 Кошелёк: ${wallet}\n✅ Статус: Выплачена\n━━━━━━━━━━━━━━━━━━━\n#выплата #ryzenteam`;
+            showToast('📨 Сообщение отправлено в группу!', '#4caf50');
+            console.log('Сообщение в группу:\n', message);
+            // Здесь можно отправить запрос на ваш бот для реальной отправки
+        }
+
+        function notifyUser(nft, amount) {
+            // Имитация уведомления пользователя
+            showToast(`💬 Пользователю отправлено: "Выплата ${amount} ETH за ${nft} одобрена и зачислена на баланс"`, '#4caf50');
+            // В реальном проекте здесь будет вызов API бота
+        }
+
+        // ===== ОТПРАВКА ЗАЯВКИ =====
+        const payoutBtn = document.getElementById('payoutBtn');
+        const payoutNft = document.getElementById('payoutNft');
+        const payoutWallet = document.getElementById('payoutWallet');
+
+        if (payoutBtn) {
+            payoutBtn.addEventListener('click', function() {
+                const nft = payoutNft.value;
+                const wallet = payoutWallet.value.trim();
+                if (!wallet || wallet.length < 6) {
+                    showToast('⚠️ Введите корректный кошелёк TON.', '#ff9800');
                     return;
                 }
-                panel.innerHTML = '';
-                adminRequests.forEach((req, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'admin-request';
-                    div.innerHTML = `
-                        <div class="info">
-                            <strong>${req.nft}</strong> · ${req.wallet} <br>
-                            <span style="font-size:12px;opacity:0.4;">${req.date}</span>
-                        </div>
-                        <div class="actions">
-                            <button class="accept" data-index="${index}">✅ Принять</button>
-                            <button class="reject" data-index="${index}">❌ Отклонить</button>
-                        </div>
-                    `;
-                    panel.appendChild(div);
-                });
-
-                panel.querySelectorAll('.accept').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const idx = parseInt(this.dataset.index);
-                        const req = adminRequests[idx];
-                        if (!req) return;
-                        const amount = prompt('Введите сумму выплаты (ETH):', '0.1');
-                        if (amount === null) return;
-                        const val = parseFloat(amount);
-                        if (isNaN(val) || val <= 0) {
-                            showToast('⚠️ Некорректная сумма.', '#ff9800');
-                            return;
+                if (window.Telegram && Telegram.WebApp) {
+                    const data = JSON.stringify({ nft, wallet });
+                    Telegram.WebApp.sendData(data);
+                    showToast('✅ Заявка отправлена!', '#4caf50');
+                    payoutWallet.value = '';
+                    // Добавляем заявку в список для админа (если админ уже залогинен)
+                    if (isAdmin) {
+                        adminRequests.push({ nft, wallet, date: new Date().toLocaleString() });
+                        localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
+                        if (document.getElementById('adminPanelWrapper').style.display === 'block') {
+                            loadAdminRequests();
                         }
-                        updateBalanceUI(currentBalance + val);
-                        adminRequests.splice(idx, 1);
-                        localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
-                        loadAdminRequests();
-                        showToast(`✅ Выплата ${val} ETH принята!`, '#4caf50');
-                        sendToGroup(req.nft, val, req.wallet);
-                    });
-                });
-                panel.querySelectorAll('.reject').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const idx = parseInt(this.dataset.index);
-                        adminRequests.splice(idx, 1);
-                        localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
-                        loadAdminRequests();
-                        showToast('❌ Заявка отклонена.', '#f44336');
-                    });
-                });
-            }
-
-            function sendToGroup(nft, amount, wallet) {
-                const message =
-                    `📢 *НОВАЯ ВЫПЛАТА В ГРУППЕ!*\n━━━━━━━━━━━━━━━━━━━\n🖼 NFT: ${nft}\n💰 Сумма: ${amount} ETH\n💳 Кошелёк: ${wallet}\n✅ Статус: Выплачена\n━━━━━━━━━━━━━━━━━━━\n#выплата #ryzenteam`;
-                showToast('📨 Сообщение отправлено в группу!', '#4caf50');
-                console.log('Сообщение в группу:\n', message);
-            }
-
-            if (isAdmin) {
-                if (adminRequests.length === 0) {
-                    adminRequests = [
-                        { nft: 'Vintage Cigar #24057', wallet: 'EQD1234567890abcdef', date: new Date().toLocaleString() },
-                        { nft: 'CyberPunk #1337', wallet: 'UQD9876543210', date: new Date().toLocaleString() }
-                    ];
-                    localStorage.setItem('adminRequests', JSON.stringify(adminRequests));
-                }
-                setTimeout(() => {
-                    if (document.getElementById('page-admin').classList.contains('active')) {
-                        loadAdminRequests();
                     }
-                }, 400);
-                document.querySelector('[data-tab="admin"]')?.addEventListener('click', function() {
-                    setTimeout(loadAdminRequests, 200);
+                } else {
+                    alert('Заявка: ' + nft + ', ' + wallet);
+                }
+            });
+        }
+
+        // ===== ПРИГЛАШЕНИЕ =====
+        document.getElementById('inviteBtn').addEventListener('click', function() {
+            const link = 'https://t.me/ryzenpanelsbot?start=ref_' + (userData.id || '000');
+            if (navigator.share) {
+                navigator.share({ title: 'Ryzen Team', text: 'Присоединяйся к Ryzen Team!', url: link });
+            } else {
+                navigator.clipboard.writeText(link).then(() => {
+                    showToast('✅ Ссылка скопирована!');
                 });
             }
+        });
 
-            // ===== TOAST =====
-            function showToast(message, color = '#ffa500') {
-                const container = document.getElementById('toastContainer');
-                const toast = document.createElement('div');
-                toast.className = 'toast';
-                toast.style.borderColor = color + '55';
-                toast.textContent = message;
-                container.appendChild(toast);
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                    toast.style.transition = 'opacity 0.5s ease';
-                    setTimeout(() => toast.remove(), 500);
-                }, 4000);
-            }
+        // ===== TOAST =====
+        function showToast(message, color = '#ffa500') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.borderColor = color + '55';
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
 
-            // ===== ОБНОВЛЕНИЕ БАЛАНСА ИЗ URL =====
-            const urlParams = new URLSearchParams(window.location.search);
-            const newBalance = parseFloat(urlParams.get('balance'));
-            if (!isNaN(newBalance) && newBalance > 0) {
-                updateBalanceUI(currentBalance + newBalance);
-                showToast(`💰 Баланс пополнен на ${newBalance} ETH`, '#4caf50');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
+        // ===== ОБНОВЛЕНИЕ БАЛАНСА ИЗ URL =====
+        const urlParams = new URLSearchParams(window.location.search);
+        const newBalance = parseFloat(urlParams.get('balance'));
+        if (!isNaN(newBalance) && newBalance > 0) {
+            updateBalanceUI(currentBalance + newBalance);
+            showToast(`💰 Баланс пополнен на ${newBalance} ETH`, '#4caf50');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
 
-            console.log('Ryzen Team Panel загружена. Админ:', isAdmin);
-        })();
-    </script>
+        // ===== ВИДЖЕТЫ: Показываем только наворканные NFT (пока none) =====
+        // В будущем здесь будет загрузка из данных пользователя
+        const nftGrid = document.getElementById('nftGrid');
+        // Показываем сообщение об отсутствии
+        nftGrid.innerHTML = '<div class="nft-empty">У вас пока нет наворканных подарков</div>';
+
+        console.log('Ryzen Team Panel загружена. Админ:', isAdmin);
+    })();
+</script>
 </body>
 </html>
