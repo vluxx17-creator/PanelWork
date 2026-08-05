@@ -6,7 +6,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, Message, CallbackQuery, ChatPermissions
@@ -70,6 +70,10 @@ class CaptchaState(StatesGroup):
 
 class BroadcastState(StatesGroup):
     waiting_message = State()
+
+class AdminStates(StatesGroup):
+    waiting_amount = State()
+    waiting_reason = State()
 
 # ========== ИНИЦИАЛИЗАЦИЯ БОТА ==========
 bot = Bot(token=BOT_TOKEN)
@@ -364,10 +368,10 @@ async def accept_payout(callback: CallbackQuery, state: FSMContext):
     payout_id = int(callback.data.split('_')[1])
     await state.update_data(payout_id=payout_id)
     await callback.message.answer("💰 Введите сумму выплаты (в TON):")
-    await state.set_state("waiting_amount")
+    await state.set_state(AdminStates.waiting_amount)
     await callback.answer()
 
-@dp.message(StateFilter("waiting_amount"))
+@dp.message(AdminStates.waiting_amount)
 async def process_amount(message: Message, state: FSMContext):
     if message.from_user.id not in ADMIN_IDS:
         await message.answer("⛔ Нет прав.")
@@ -448,7 +452,7 @@ async def process_amount(message: Message, state: FSMContext):
     await state.clear()
 
 @dp.callback_query(lambda c: c.data and c.data.startswith('reject_'))
-async def reject_payout(callback: CallbackQuery):
+async def reject_payout(callback: CallbackQuery, state: FSMContext):
     if callback.from_user.id not in ADMIN_IDS:
         await callback.answer("⛔ Нет прав.", show_alert=True)
         return
@@ -461,10 +465,10 @@ async def reject_payout(callback: CallbackQuery):
 
     await callback.message.answer("✏️ Введите причину отклонения:")
     await callback.answer()
-    await dp.fsm.storage.set_state(callback.from_user.id, "waiting_reason")
-    await dp.fsm.storage.set_data(callback.from_user.id, {"payout_id": payout_id})
+    await state.set_state(AdminStates.waiting_reason)
+    await state.update_data(payout_id=payout_id)
 
-@dp.message(StateFilter("waiting_reason"))
+@dp.message(AdminStates.waiting_reason)
 async def process_reject_reason(message: Message, state: FSMContext):
     if message.from_user.id not in ADMIN_IDS:
         await message.answer("⛔ Нет прав.")
